@@ -1,0 +1,16 @@
+#!/bin/bash
+#description=This script will find and delete files and empty directories older than 30 days in the .recycle subdirectory in each share
+#arrayStarted=true
+#noParity=true
+
+# Run on schedule: 0 1 * * *
+
+base_dir="/mnt/user/"
+
+find "$base_dir" -maxdepth 1 -mindepth 1 -type d -exec sh -c '
+    for dir do
+        echo "Processing directory: $dir"
+        find "$dir/.recycle" -type f -atime +30 -mtime +30 -printf "Deleting file: %p\n" -delete
+        find "$dir/.recycle" -type d -empty -atime +30 -mtime +30 -printf "Deleting directory: %p\n" -delete
+    done
+' find-sh {} +
