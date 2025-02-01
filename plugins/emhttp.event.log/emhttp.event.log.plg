@@ -2,15 +2,18 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "emhttp.event.log">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.01.26">
-<!ENTITY md5       "9643a1f0bd2d22ec40f105b3d6612202">
+<!ENTITY version   "2025.01.31">
+<!ENTITY md5       "26114fd6d732e92aaa628e7329315d5d">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.01.31
+- Hook directly into emhttp `any_event` trigger.
+
 ###2025.01.26
-- Initial Release
+- Initial Release.
 </CHANGES>
 
 <!--

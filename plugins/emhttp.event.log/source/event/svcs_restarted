@@ -1,3 +1,0 @@
-#!/bin/bash
-
-logger "emhttp_event: $1"
