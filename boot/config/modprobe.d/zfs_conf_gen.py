@@ -1,6 +1,6 @@
 import os
 
-total_ram = 67400245248 # run `free -b`
+total_ram = 135045971968 # run `cat /proc/meminfo | grep MemTotal`, * 1024
 huge_page_size = 2 * 1024 * 1024 # 2 MiB
 huge_page_count = 24576
 available_cpus = 14
@@ -32,13 +32,16 @@ with open(zfs_conf_path, 'w') as f:
     if zfs_arc_sys_free > 512 * 1024:
         f.write(f'options zfs zfs_arc_sys_free={zfs_arc_sys_free}\n')
 
-    # default: 10% of system memory
-    f.write(f'options zfs zfs_dirty_data_max={round(0.1 * total_available_ram)}\n')
-
     # default: min(1/4 of system memory, 4 GiB)
-    zfs_dirty_data_max_max = round(total_available_ram / 4)
-    if zfs_dirty_data_max_max < 4 * 1024 * 1024 * 1024:
+    zfs_dirty_data_max_max_cap = 4 * 1024 * 1024 * 1024
+    zfs_dirty_data_max_max = min(round(total_available_ram / 4), zfs_dirty_data_max_max_cap)
+    if zfs_dirty_data_max_max < zfs_dirty_data_max_max_cap:
         f.write(f'options zfs zfs_dirty_data_max_max={zfs_dirty_data_max_max}\n')
+
+    # default: 10% of system memory, capped at `zfs_dirty_data_max_max`
+    zfs_dirty_data_max = round(0.1 * total_available_ram)
+    if zfs_dirty_data_max < zfs_dirty_data_max_max:
+        f.write(f'options zfs zfs_dirty_data_max={round(0.1 * total_available_ram)}\n')
 
     # default: 20 (i.e. 1/20 of system memory)
     f.write(f'options zfs zfs_scan_mem_lim_fact={round(20 * 1 / percent_available_ram)}\n')
