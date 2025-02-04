@@ -1,13 +1,11 @@
 import os
 
 total_ram = 135045971968 # run `cat /proc/meminfo | grep MemTotal`, * 1024
-huge_page_size = 2 * 1024 * 1024 # 2 MiB
-huge_page_count = 24576
+total_reserved_ram = 24576 * 2 * 1024 * 1024
 available_cpus = 14
 total_cpus = 64
 
-total_huge_page_size = huge_page_size * huge_page_count
-total_available_ram = total_ram - total_huge_page_size
+total_available_ram = total_ram - total_reserved_ram
 percent_available_ram = total_available_ram / total_ram
 percent_available_cpus = available_cpus / total_cpus
 
