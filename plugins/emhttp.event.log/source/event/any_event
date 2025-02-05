@@ -1,5 +1,5 @@
 #!/bin/bash
 
 if [ "$1" != "poll_attributes" ]; then
-    logger "emhttp_event: $1"
+    logger -t "emhttp_event" "$1"
 fi
