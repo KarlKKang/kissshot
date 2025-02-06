@@ -1,0 +1,80 @@
+<?xml version='1.0' standalone='yes'?>
+<!DOCTYPE PLUGIN [
+<!ENTITY name      "zfs.encryption.automount">
+<!ENTITY author    "KarlKKang">
+<!ENTITY version   "2025.02.05">
+<!ENTITY md5       "44c6f87418b2ebd32d26f6f9d56f924e">
+]>
+
+<PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
+
+<CHANGES>
+###2025.02.05
+- Initial Release.
+</CHANGES>
+
+<!--
+Get the plugin bundle.
+-->
+<FILE Name="/boot/config/plugins/&name;/&name;-&version;.txz">
+<MD5>&md5;</MD5>
+</FILE>
+
+<!--
+The 'pre-install' script.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+# Remove emhttp files so we can re-install.
+rm -f -r /usr/local/emhttp/plugins/&name;/* 2>/dev/null
+
+# Remove old 'bundle' files.
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null | grep -v '&version;')
+</INLINE>
+</FILE>
+
+<!--
+Install the plugin bundle.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+# Install the 'bundle'.
+mkdir -p /usr/local/emhttp/plugins/&name; 2>/dev/null
+tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2>/dev/null
+</INLINE>
+</FILE>
+
+<!--
+The 'post-install' script.
+-->
+<FILE Run="/bin/bash">
+<INLINE>
+echo ""
+echo "-----------------------------------------------------------"
+echo " &name; is installed."
+echo " Copyright 2025, &author;"
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+<!--
+The 'remove' script.
+-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+# Remove all plugin files.
+rm -f -r /usr/local/emhttp/plugins/&name; 2>/dev/null
+rm -f -r /boot/config/plugins/&name; 2>/dev/null
+
+echo ""
+echo "-----------------------------------------------------------"
+echo " &name; has been removed."
+echo " Version: &version;"
+echo "-----------------------------------------------------------"
+echo ""
+</INLINE>
+</FILE>
+
+</PLUGIN>

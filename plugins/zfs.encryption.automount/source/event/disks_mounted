@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Reference: https://github.com/andrebrait/unraid-native-zfs-encryption?tab=readme-ov-file#setting-up-the-startup-script
+
+# Discover all encrypted datasets we have, skipping over the prompt key locations
+declare -a encrypted_datasets=($(zfs list -r -t filesystem -H -o name,keylocation | grep -F '/' | grep -vE '\b(none|prompt)\b' | cut -d$'\t' -f1))
+
+zfs_automount_logger() {
+    if [ "$2" = "error" ]; then
+        priority="user.err"
+        /usr/local/emhttp/webGui/scripts/notify -s "ZFS Automount" -d "$1" -i alert
+    else
+        priority="user.notice"
+    fi
+    logger -p $priority -t "zfs_automount" "$1"
+}
+
+for d in "${encrypted_datasets[@]}"; do
+
+    mountpoint="$(zfs list -H -o mountpoint "${d}")"
+
+    # Ensure the regular location is immutable so nothing can write to it unless we're mounted!
+    out="$(mkdir -p "${mountpoint}" 2>&1 && chattr +i "${mountpoint}" 2>&1)"
+    if (($? != 0)); then
+        zfs_automount_logger "Failed to create directory for ${d}: ${out}" "error"
+        exit 1
+    fi
+
+    zfs_automount_logger "Loading key for: ${d}"
+    out="$(zfs load-key -r "${d}" 2>&1)"
+    if (($? == 0)); then
+        zfs_automount_logger "Loaded key for ${d}"
+    else
+        zfs_automount_logger "Failed to load key for ${d}: ${out}" "error"
+        exit 1
+    fi
+
+    zfs_automount_logger "Mounting ${d} at ${mountpoint}"
+    out="$(zfs mount "${d}" 2>&1)"
+    if (($? == 0)); then
+        zfs_automount_logger "Mounted ZFS dataset ${d}"
+    else
+        zfs_automount_logger "Failed to mount ZFS dataset ${d}: ${out}" "error"
+        exit 1
+    fi
+
+done
