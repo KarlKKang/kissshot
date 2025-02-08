@@ -2,13 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "zfs.encryption.automount">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.02.05">
-<!ENTITY md5       "44c6f87418b2ebd32d26f6f9d56f924e">
+<!ENTITY version   "2025.02.08">
+<!ENTITY md5       "8be62f4226ea4edbc674c1905b5fa351">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.02.08
+- Reduce the number of logs.
+- Send WebGUI alerts on unload key errors.
+
 ###2025.02.05
 - Initial Release.
 </CHANGES>

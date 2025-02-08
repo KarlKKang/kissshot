@@ -26,16 +26,12 @@ for d in "${encrypted_datasets[@]}"; do
         exit 1
     fi
 
-    zfs_automount_logger "Loading key for: ${d}"
     out="$(zfs load-key -r "${d}" 2>&1)"
-    if (($? == 0)); then
-        zfs_automount_logger "Loaded key for ${d}"
-    else
+    if (($? != 0)); then
         zfs_automount_logger "Failed to load key for ${d}: ${out}" "error"
         exit 1
     fi
 
-    zfs_automount_logger "Mounting ${d} at ${mountpoint}"
     out="$(zfs mount "${d}" 2>&1)"
     if (($? == 0)); then
         zfs_automount_logger "Mounted ZFS dataset ${d}"

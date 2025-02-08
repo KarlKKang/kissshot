@@ -2,8 +2,10 @@
 
 out="$(zfs unload-key -a 2>&1)"
 if (($? == 0)); then
-    logger -t "zfs_automount" "All keys unloaded"
+    logger -t "zfs_automount" "All ZFS encryption keys unloaded"
 else
-    logger -p user.err -t "zfs_automount" "Failed to unload all keys: ${out}"
+    msg="Failed to unload ZFS encryption keys: ${out}"
+    /usr/local/emhttp/webGui/scripts/notify -s "ZFS Automount" -d "$msg" -i alert
+    logger -p user.err -t "zfs_automount" "$msg"
     exit 1
 fi
