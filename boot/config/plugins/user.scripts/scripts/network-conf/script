@@ -1,0 +1,14 @@
+#!/bin/bash
+#description=This script will configure the network interfaces on the server
+
+# Run on schedule: At First Array Start Only
+
+sysctl -p /boot/config/plugins/user.scripts/scripts/network-conf/sysctl.conf
+
+ip rule add from 172.25.224.2 table 1
+ip route add 172.25.224.0/24 dev br0 table 1 src 172.25.224.2
+ip route add default via 172.25.224.1 dev br0 table 1 src 172.25.224.2
+
+ip rule add from 172.25.224.128 table 2
+ip route add 172.25.224.0/24 dev br1 table 2 src 172.25.224.128
+ip route add default via 172.25.224.1 dev br1 table 2 src 172.25.224.128
