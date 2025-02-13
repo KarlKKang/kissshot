@@ -19,3 +19,6 @@ ip route add default via 172.25.224.1 dev br1 table 2 src 172.25.224.128
 # Remove the /p option to make the route non-persistent
 # The XX and YY interfaces can be found in the first column of the output of the command:
 #  route print
+
+arping -c 3 -U -I br0 172.25.224.2
+arping -c 3 -U -I br1 172.25.224.128
