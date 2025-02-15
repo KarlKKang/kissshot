@@ -2,9 +2,6 @@
 
 # Reference: https://github.com/andrebrait/unraid-native-zfs-encryption?tab=readme-ov-file#setting-up-the-startup-script
 
-# Discover all encrypted datasets we have, skipping over the prompt key locations
-declare -a encrypted_datasets=($(zfs list -r -t filesystem -H -o name,keylocation | grep -F '/' | grep -vE '\b(none|prompt)\b' | cut -d$'\t' -f1))
-
 zfs_automount_logger() {
     if [ "$2" = "error" ]; then
         priority="user.err"
@@ -14,6 +11,9 @@ zfs_automount_logger() {
     fi
     logger -p $priority -t "zfs_automount" "$1"
 }
+
+# Discover all encrypted datasets we have, skipping over the prompt key locations
+declare -a encrypted_datasets=($(zfs list -r -t filesystem -H -o name,keylocation | grep -F '/' | grep -vE '\b(none|prompt)\b' | cut -d$'\t' -f1))
 
 for d in "${encrypted_datasets[@]}"; do
     # Ensure the regular location is immutable so nothing can write to it unless we're mounted!
@@ -35,6 +35,19 @@ for d in "${encrypted_datasets[@]}"; do
         zfs_automount_logger "Mounted ZFS dataset ${d}"
     else
         zfs_automount_logger "Failed to mount ZFS dataset ${d}: ${out}" "error"
+        exit 1
+    fi
+done
+
+
+declare -a encrypted_datasets=($(zfs list -r -t volume -H -o name,keylocation | grep -F '/' | grep -vE '\b(none|prompt)\b' | cut -d$'\t' -f1))
+
+for d in "${encrypted_datasets[@]}"; do
+    out="$(zfs load-key -r "${d}" 2>&1)"
+    if (($? == 0)); then
+        zfs_automount_logger "Mounted ZFS dataset ${d}"
+    else
+        zfs_automount_logger "Failed to load key for ${d}: ${out}" "error"
         exit 1
     fi
 done

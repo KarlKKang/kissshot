@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "zfs.encryption.automount">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.02.08">
-<!ENTITY md5       "8be62f4226ea4edbc674c1905b5fa351">
+<!ENTITY version   "2025.02.15">
+<!ENTITY md5       "e96c80c183f56ba28f69483cdfb8f02a">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.02.08
+- Auto unlock encrypted ZFS volumes.
+
 ###2025.02.08
 - Reduce the number of logs.
 - Send WebGUI alerts on unload key errors.
