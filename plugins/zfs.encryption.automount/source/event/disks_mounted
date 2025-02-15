@@ -16,10 +16,8 @@ zfs_automount_logger() {
 }
 
 for d in "${encrypted_datasets[@]}"; do
-
-    mountpoint="$(zfs list -H -o mountpoint "${d}")"
-
     # Ensure the regular location is immutable so nothing can write to it unless we're mounted!
+    mountpoint="$(zfs list -H -o mountpoint "${d}")"
     out="$(mkdir -p "${mountpoint}" 2>&1 && chattr +i "${mountpoint}" 2>&1)"
     if (($? != 0)); then
         zfs_automount_logger "Failed to create directory for ${d}: ${out}" "error"
@@ -39,5 +37,4 @@ for d in "${encrypted_datasets[@]}"; do
         zfs_automount_logger "Failed to mount ZFS dataset ${d}: ${out}" "error"
         exit 1
     fi
-
 done
