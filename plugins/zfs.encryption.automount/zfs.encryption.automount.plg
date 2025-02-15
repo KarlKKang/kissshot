@@ -9,7 +9,7 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
-###2025.02.08
+###2025.02.15
 - Auto unlock encrypted ZFS volumes.
 
 ###2025.02.08
