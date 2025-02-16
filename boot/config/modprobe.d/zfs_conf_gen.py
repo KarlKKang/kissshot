@@ -61,3 +61,7 @@ with open(zfs_conf_path, 'w') as f:
 
     # default: 80
     f.write(f'options zfs zio_taskq_batch_pct={round(80 * percent_available_cpus)}\n')
+
+
+    # other options
+    f.write('options zfs l2arc_exclude_special=1\n')
