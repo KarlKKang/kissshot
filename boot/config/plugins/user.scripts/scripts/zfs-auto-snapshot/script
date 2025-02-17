@@ -7,18 +7,22 @@
 
 $config = [
     [
-        'kokorowatari/vol1' => [
-            'retain' => 30 * 24 * 60 * 60,
-        ],
-        'kokorowatari/vol2' => [
-            'retain' => 30 * 24 * 60 * 60,
-        ],
+        'domain' => 'TSUKIHI',
+        'datasets' => [
+            'kokorowatari/vol1' => [
+                'retain' => 30 * 24 * 60 * 60,
+            ],
+            'kokorowatari/vol2' => [
+                'retain' => 30 * 24 * 60 * 60,
+            ],
+        ]
     ],
 ];
 
 enum LOG_LEVEL: string
 {
     case INFO = 'notice';
+    case WARNING = 'warning';
     case ERROR = 'err';
 }
 
@@ -37,6 +41,7 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 function system_command(string $command, array &$output = []): bool
 {
     $command .= ' 2>&1';
+    logger($command);
     try {
         $result = exec($command, $output, $retval);
     } catch (ValueError $e) {
@@ -44,7 +49,7 @@ function system_command(string $command, array &$output = []): bool
         return false;
     }
     if ($retval !== 0 || $result === false) {
-        logger('Failed to execute system command with exit code ' . $retval . ': ' . $command, LOG_LEVEL::ERROR);
+        logger('Command failed with exit code ' . $retval, LOG_LEVEL::ERROR);
         foreach ($output as $line) {
             logger($line, LOG_LEVEL::ERROR);
         }
@@ -114,15 +119,53 @@ function cleanup_snapshots(string $dataset, array $snapshots, int $retain): void
     }
 }
 
+function get_domain_state(string $domain): string|false
+{
+    $output = [];
+    if (!system_command('virsh domstate ' . escapeshellarg($domain), $output)) {
+        logger('Failed to get domain state for domain ' . $domain, LOG_LEVEL::ERROR);
+        return false;
+    }
+    $state = $output[0] ?? null;
+    if (!is_string($state)) {
+        logger('Invalid domain state for domain ' . $domain . ': ' . json_encode($output), LOG_LEVEL::ERROR);
+        return false;
+    }
+    return $state;
+}
+
+function fs_freeze(string $domain): bool
+{
+    $result = system_command('virsh domfsfreeze ' . escapeshellarg($domain));
+    if (!$result) {
+        logger('Failed to freeze filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+    }
+    return $result;
+}
+
+function fs_thaw(string $domain): void
+{
+    if (!system_command('virsh domfsthaw ' . escapeshellarg($domain))) {
+        logger('Failed to thaw filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+    }
+}
+
 function main(array $config): void
 {
     foreach ($config as $txg) {
-        if (count($txg) === 0) {
+        $datasets = $txg['datasets'] ?? null;
+        if (!is_array($datasets)) {
+            logger('Invalid datasets configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
             continue;
         }
+        if (count($datasets) === 0) {
+            logger('No datasets configured: ' . json_encode($txg), LOG_LEVEL::WARNING);
+            continue;
+        }
+
         $create_cmd = 'zfs snapshot';
         $cleanup_args = [];
-        foreach ($txg as $dataset => $dataset_config) {
+        foreach ($datasets as $dataset => $dataset_config) {
             $existing_snapshots = get_snapshots($dataset);
             if ($existing_snapshots === false) {
                 continue;
@@ -135,9 +178,32 @@ function main(array $config): void
             $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
             $cleanup_args[] = [$dataset, $existing_snapshots, $dataset_config['retain']];
         }
-        if (!system_command($create_cmd)) {
+
+        $domain = $txg['domain'] ?? null;
+        $domain_is_running = false;
+        if ($domain !== null) {
+            if (!is_string($domain)) {
+                logger('Invalid domain configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
+                continue;
+            }
+            $domain_state = get_domain_state($domain);
+            if ($domain_state === false) {
+                continue;
+            }
+            $domain_is_running = $domain_state === 'running';
+            if ($domain_is_running && !fs_freeze($domain)) {
+                continue;
+            }
+        }
+
+        $create_success = system_command($create_cmd);
+        if ($domain_is_running) {
+            fs_thaw($domain);
+        }
+        if (!$create_success) {
             continue;
         }
+
         foreach ($cleanup_args as $cleanup_arg) {
             cleanup_snapshots(...$cleanup_arg);
         }
