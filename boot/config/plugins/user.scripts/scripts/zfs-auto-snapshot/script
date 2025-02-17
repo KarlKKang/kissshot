@@ -6,12 +6,14 @@
 # Run on schedule: 0 3 * * *
 
 $config = [
-    'kokorowatari/vol1' => [
-        'retain' => 30 * 24 * 60 * 60,
+    [
+        'kokorowatari/vol1' => [
+            'retain' => 30 * 24 * 60 * 60,
+        ],
+        'kokorowatari/vol2' => [
+            'retain' => 30 * 24 * 60 * 60,
+        ],
     ],
-    'kokorowatari/vol2' => [
-        'retain' => 30 * 24 * 60 * 60,
-    ]
 ];
 
 enum LOG_LEVEL: string
@@ -97,16 +99,6 @@ function generate_random_string(int $length): string
     return $random_string;
 }
 
-function create_snapshot(string $dataset, array $existing_snapshots): bool
-{
-    $snapshot_name = generate_random_string(8);
-    while (array_key_exists($snapshot_name, $existing_snapshots)) {
-        $snapshot_name = generate_random_string(8);
-    }
-    $snapshot_name = SNAPSHOT_PREFIX . $snapshot_name;
-    return system_command('zfs snapshot ' . escapeshellarg($dataset . '@' . $snapshot_name));
-}
-
 function destroy_snapshot(string $dataset, string $snapshot_name): void
 {
     system_command('zfs destroy ' . escapeshellarg($dataset . '@' . SNAPSHOT_PREFIX . $snapshot_name));
@@ -122,13 +114,34 @@ function cleanup_snapshots(string $dataset, array $snapshots, int $retain): void
     }
 }
 
-foreach ($config as $dataset => $dataset_config) {
-    $snapshots = get_snapshots($dataset);
-    if ($snapshots === false) {
-        continue;
+function main(array $config): void
+{
+    foreach ($config as $txg) {
+        if (count($txg) === 0) {
+            continue;
+        }
+        $create_cmd = 'zfs snapshot';
+        $cleanup_args = [];
+        foreach ($txg as $dataset => $dataset_config) {
+            $existing_snapshots = get_snapshots($dataset);
+            if ($existing_snapshots === false) {
+                continue;
+            }
+            $new_snapshot_name = generate_random_string(8);
+            while (array_key_exists($new_snapshot_name, $existing_snapshots)) {
+                $new_snapshot_name = generate_random_string(8);
+            }
+            $new_snapshot_name = SNAPSHOT_PREFIX . $new_snapshot_name;
+            $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
+            $cleanup_args[] = [$dataset, $existing_snapshots, $dataset_config['retain']];
+        }
+        if (!system_command($create_cmd)) {
+            continue;
+        }
+        foreach ($cleanup_args as $cleanup_arg) {
+            cleanup_snapshots(...$cleanup_arg);
+        }
     }
-    if (!create_snapshot($dataset, $snapshots)) {
-        continue;
-    }
-    cleanup_snapshots($dataset, $snapshots, $dataset_config['retain']);
 }
+
+main($config);
