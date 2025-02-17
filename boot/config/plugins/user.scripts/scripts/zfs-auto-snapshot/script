@@ -168,6 +168,15 @@ function snapshot_txg(array $txg): void
     $create_cmd = 'zfs snapshot';
     $cleanup_args = [];
     foreach ($datasets as $dataset => $dataset_config) {
+        if (!is_string($dataset) || !is_array($dataset_config)) {
+            logger('Invalid dataset configuration: ' . json_encode([$dataset => $dataset_config]), LOG_LEVEL::ERROR);
+            return;
+        }
+        $retain = $dataset_config['retain'] ?? null;
+        if (!is_int($retain)) {
+            logger('Invalid retain configuration for dataset ' . $dataset . ': ' . json_encode($dataset_config), LOG_LEVEL::ERROR);
+            return;
+        }
         $existing_snapshots = get_snapshots($dataset);
         if ($existing_snapshots === false) {
             return;
@@ -178,7 +187,7 @@ function snapshot_txg(array $txg): void
         }
         $new_snapshot_name = SNAPSHOT_PREFIX . $new_snapshot_name;
         $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
-        $cleanup_args[] = [$dataset, $existing_snapshots, $dataset_config['retain']];
+        $cleanup_args[] = [$dataset, $existing_snapshots, $retain];
     }
 
     $domain = $txg['domain'] ?? null;
@@ -214,6 +223,10 @@ function snapshot_txg(array $txg): void
 function main(array $config): void
 {
     foreach ($config as $txg) {
+        if (!is_array($txg)) {
+            logger('Invalid transaction group configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
+            continue;
+        }
         snapshot_txg($txg);
     }
 }
