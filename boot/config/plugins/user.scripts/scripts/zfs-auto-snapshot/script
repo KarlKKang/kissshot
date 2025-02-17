@@ -153,63 +153,68 @@ function fs_thaw(string $domain): void
     }
 }
 
+function snapshot_txg(array $txg): void
+{
+    $datasets = $txg['datasets'] ?? null;
+    if (!is_array($datasets)) {
+        logger('Invalid datasets configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
+        return;
+    }
+    if (count($datasets) === 0) {
+        logger('No datasets configured: ' . json_encode($txg), LOG_LEVEL::WARNING);
+        return;
+    }
+
+    $create_cmd = 'zfs snapshot';
+    $cleanup_args = [];
+    foreach ($datasets as $dataset => $dataset_config) {
+        $existing_snapshots = get_snapshots($dataset);
+        if ($existing_snapshots === false) {
+            return;
+        }
+        $new_snapshot_name = generate_random_string(8);
+        while (array_key_exists($new_snapshot_name, $existing_snapshots)) {
+            $new_snapshot_name = generate_random_string(8);
+        }
+        $new_snapshot_name = SNAPSHOT_PREFIX . $new_snapshot_name;
+        $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
+        $cleanup_args[] = [$dataset, $existing_snapshots, $dataset_config['retain']];
+    }
+
+    $domain = $txg['domain'] ?? null;
+    $domain_is_running = false;
+    if ($domain !== null) {
+        if (!is_string($domain)) {
+            logger('Invalid domain configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
+            return;
+        }
+        $domain_state = get_domain_state($domain);
+        if ($domain_state === false) {
+            return;
+        }
+        $domain_is_running = $domain_state === 'running';
+        if ($domain_is_running && !fs_freeze($domain)) {
+            return;
+        }
+    }
+
+    $create_success = system_command($create_cmd);
+    if ($domain_is_running) {
+        fs_thaw($domain);
+    }
+    if (!$create_success) {
+        return;
+    }
+
+    foreach ($cleanup_args as $cleanup_arg) {
+        cleanup_snapshots(...$cleanup_arg);
+    }
+}
+
 function main(array $config): void
 {
     foreach ($config as $txg) {
-        $datasets = $txg['datasets'] ?? null;
-        if (!is_array($datasets)) {
-            logger('Invalid datasets configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
-            continue;
-        }
-        if (count($datasets) === 0) {
-            logger('No datasets configured: ' . json_encode($txg), LOG_LEVEL::WARNING);
-            continue;
-        }
-
-        $create_cmd = 'zfs snapshot';
-        $cleanup_args = [];
-        foreach ($datasets as $dataset => $dataset_config) {
-            $existing_snapshots = get_snapshots($dataset);
-            if ($existing_snapshots === false) {
-                continue;
-            }
-            $new_snapshot_name = generate_random_string(8);
-            while (array_key_exists($new_snapshot_name, $existing_snapshots)) {
-                $new_snapshot_name = generate_random_string(8);
-            }
-            $new_snapshot_name = SNAPSHOT_PREFIX . $new_snapshot_name;
-            $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
-            $cleanup_args[] = [$dataset, $existing_snapshots, $dataset_config['retain']];
-        }
-
-        $domain = $txg['domain'] ?? null;
-        $domain_is_running = false;
-        if ($domain !== null) {
-            if (!is_string($domain)) {
-                logger('Invalid domain configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
-                continue;
-            }
-            $domain_state = get_domain_state($domain);
-            if ($domain_state === false) {
-                continue;
-            }
-            $domain_is_running = $domain_state === 'running';
-            if ($domain_is_running && !fs_freeze($domain)) {
-                continue;
-            }
-        }
-
-        $create_success = system_command($create_cmd);
-        if ($domain_is_running) {
-            fs_thaw($domain);
-        }
-        if (!$create_success) {
-            continue;
-        }
-
-        foreach ($cleanup_args as $cleanup_arg) {
-            cleanup_snapshots(...$cleanup_arg);
-        }
+        snapshot_txg($txg);
     }
 }
 
