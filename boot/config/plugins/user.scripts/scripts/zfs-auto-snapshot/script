@@ -156,6 +156,13 @@ function fs_thaw(string $domain): void
     }
 }
 
+function fs_trim(string $domain): void
+{
+    if (!system_command('virsh domfstrim ' . escapeshellarg($domain))) {
+        logger('Failed to trim filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+    }
+}
+
 function snapshot_txg(array $txg): void
 {
     $datasets = $txg['datasets'] ?? null;
@@ -205,8 +212,11 @@ function snapshot_txg(array $txg): void
             return;
         }
         $domain_is_running = $domain_state === 'running';
-        if ($domain_is_running && !fs_freeze($domain)) {
-            return;
+        if ($domain_is_running) {
+            fs_trim($domain);
+            if (!fs_freeze($domain)) {
+                return;
+            }
         }
     }
 
