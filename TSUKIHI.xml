@@ -1,0 +1,233 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<domain type='kvm'>
+  <name>TSUKIHI</name>
+  <uuid>3bd0e4d7-ada4-bf51-2c50-ef4813aa688c</uuid>
+  <metadata>
+    <vmtemplate xmlns="unraid" name="Windows 11" icon="windows11.png" os="windowstpm" webui="" storage="default"/>
+  </metadata>
+  <memory unit='KiB'>50331648</memory>
+  <currentMemory unit='KiB'>50331648</currentMemory>
+  <memoryBacking>
+    <hugepages/>
+    <nosharepages/>
+  </memoryBacking>
+  <vcpu placement='static'>32</vcpu>
+  <iothreads>3</iothreads>
+  <cputune>
+    <vcpupin vcpu='0' cpuset='16'/>
+    <vcpupin vcpu='1' cpuset='48'/>
+    <vcpupin vcpu='2' cpuset='17'/>
+    <vcpupin vcpu='3' cpuset='49'/>
+    <vcpupin vcpu='4' cpuset='18'/>
+    <vcpupin vcpu='5' cpuset='50'/>
+    <vcpupin vcpu='6' cpuset='19'/>
+    <vcpupin vcpu='7' cpuset='51'/>
+    <vcpupin vcpu='8' cpuset='20'/>
+    <vcpupin vcpu='9' cpuset='52'/>
+    <vcpupin vcpu='10' cpuset='21'/>
+    <vcpupin vcpu='11' cpuset='53'/>
+    <vcpupin vcpu='12' cpuset='22'/>
+    <vcpupin vcpu='13' cpuset='54'/>
+    <vcpupin vcpu='14' cpuset='23'/>
+    <vcpupin vcpu='15' cpuset='55'/>
+    <vcpupin vcpu='16' cpuset='24'/>
+    <vcpupin vcpu='17' cpuset='56'/>
+    <vcpupin vcpu='18' cpuset='25'/>
+    <vcpupin vcpu='19' cpuset='57'/>
+    <vcpupin vcpu='20' cpuset='26'/>
+    <vcpupin vcpu='21' cpuset='58'/>
+    <vcpupin vcpu='22' cpuset='27'/>
+    <vcpupin vcpu='23' cpuset='59'/>
+    <vcpupin vcpu='24' cpuset='28'/>
+    <vcpupin vcpu='25' cpuset='60'/>
+    <vcpupin vcpu='26' cpuset='29'/>
+    <vcpupin vcpu='27' cpuset='61'/>
+    <vcpupin vcpu='28' cpuset='30'/>
+    <vcpupin vcpu='29' cpuset='62'/>
+    <vcpupin vcpu='30' cpuset='31'/>
+    <vcpupin vcpu='31' cpuset='63'/>
+    <emulatorpin cpuset='2'/>
+    <iothreadpin iothread='1' cpuset='34'/>
+    <iothreadpin iothread='2' cpuset='3'/>
+    <iothreadpin iothread='3' cpuset='35'/>
+  </cputune>
+  <numatune>
+    <memory mode='strict' nodeset='0,2'/>
+    <memnode cellid='0' mode='strict' nodeset='0'/>
+    <memnode cellid='1' mode='strict' nodeset='2'/>
+  </numatune>
+  <os>
+    <type arch='x86_64' machine='pc-i440fx-9.1'>hvm</type>
+    <loader readonly='yes' type='pflash'>/usr/share/qemu/ovmf-x64/OVMF_CODE-pure-efi-tpm.fd</loader>
+    <nvram>/etc/libvirt/qemu/nvram/3bd0e4d7-ada4-bf51-2c50-ef4813aa688c_VARS-pure-efi-tpm.fd</nvram>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <hyperv mode='custom'>
+      <relaxed state='on'/>
+      <vapic state='on'/>
+      <spinlocks state='on' retries='8191'/>
+      <vpindex state='on'/>
+      <runtime state='on'/>
+      <synic state='on'/>
+      <stimer state='on'>
+        <direct state='on'/>
+      </stimer>
+      <reset state='on'/>
+      <vendor_id state='on' value='none'/>
+      <frequencies state='on'/>
+      <tlbflush state='on'/>
+      <ipi state='on'/>
+    </hyperv>
+  </features>
+  <cpu mode='host-passthrough' check='none' migratable='off'>
+    <topology sockets='1' dies='1' clusters='1' cores='16' threads='2'/>
+    <cache mode='passthrough'/>
+    <feature policy='require' name='topoext'/>
+    <feature policy='require' name='invtsc'/>
+    <numa>
+      <cell id='0' cpus='0-15' memory='25165824' unit='KiB'/>
+      <cell id='1' cpus='16-31' memory='25165824' unit='KiB'/>
+    </numa>
+  </cpu>
+  <clock offset='localtime'>
+    <timer name='rtc' present='no' tickpolicy='catchup'/>
+    <timer name='pit' present='no' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+    <timer name='kvmclock' present='no'/>
+    <timer name='hypervclock' present='yes'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/local/sbin/qemu</emulator>
+    <disk type='block' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native' discard='unmap' iothread='1' queues='2'/>
+      <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_d'/>
+      <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
+      <target dev='hdc' bus='virtio'/>
+      <serial>vdisk1</serial>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
+    </disk>
+    <disk type='block' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native' discard='unmap' iothread='2' queues='2'/>
+      <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_e'/>
+      <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
+      <target dev='hdd' bus='virtio'/>
+      <serial>vdisk2</serial>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
+    </disk>
+    <disk type='block' device='disk'>
+      <driver name='qemu' type='raw' cache='none' io='native' discard='unmap' iothread='3' queues='2'/>
+      <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_c'/>
+      <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
+      <target dev='hde' bus='virtio'/>
+      <serial>vdisk3</serial>
+      <boot order='1'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
+    </disk>
+    <controller type='usb' index='0' model='ich9-ehci1'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x7'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci1'>
+      <master startport='0'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0' multifunction='on'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci2'>
+      <master startport='2'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x1'/>
+    </controller>
+    <controller type='usb' index='0' model='ich9-uhci3'>
+      <master startport='4'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x2'/>
+    </controller>
+    <controller type='pci' index='0' model='pci-root'/>
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
+    </controller>
+    <interface type='bridge'>
+      <mac address='52:54:00:60:3c:08'/>
+      <source bridge='br0'/>
+      <model type='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+    </interface>
+    <serial type='pty'>
+      <target type='isa-serial' port='0'>
+        <model name='isa-serial'/>
+      </target>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <channel type='unix'>
+      <target type='virtio' name='org.qemu.guest_agent.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+    <tpm model='tpm-tis'>
+      <backend type='emulator' version='2.0' persistent_state='yes'/>
+    </tpm>
+    <audio id='1' type='none'/>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0b' slot='0x00' function='0x0'/>
+      </source>
+      <rom file='/mnt/user/system/TitanRTX.dump'/>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0b' slot='0x00' function='0x1'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0a' slot='0x00' function='0x0'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0b' slot='0x00' function='0x2'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0c' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0b' slot='0x00' function='0x3'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0d' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x0c' slot='0x00' function='0x3'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0e' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x47' slot='0x00' function='0x3'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x0f' function='0x0'/>
+    </hostdev>
+    <hostdev mode='subsystem' type='usb' managed='no'>
+      <source>
+        <vendor id='0x8087'/>
+        <product id='0x0025'/>
+      </source>
+      <address type='usb' bus='0' port='1'/>
+    </hostdev>
+    <memballoon model='none'/>
+  </devices>
+</domain>
