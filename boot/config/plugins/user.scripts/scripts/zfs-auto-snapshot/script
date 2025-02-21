@@ -9,14 +9,14 @@ $config = [
     [
         'domain' => 'TSUKIHI',
         'datasets' => [
-            'kokorowatari/vol1' => [
+            'kokorowatari/domains/TSUKIHI/vdisk_c' => [
                 'retain' => 30 * 24 * 60 * 60,
             ],
-            'kokorowatari/vol2' => [
+            'kokorowatari/domains/TSUKIHI/vdisk_d' => [
                 'retain' => 30 * 24 * 60 * 60,
             ],
-            'kokorowatari/vol3' => [
-                'retain' => 30 * 24 * 60 * 60,
+            'kokorowatari/domains/TSUKIHI/vdisk_e' => [
+                'retain' => 7 * 24 * 60 * 60,
             ],
         ]
     ],
