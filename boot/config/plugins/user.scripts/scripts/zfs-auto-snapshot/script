@@ -52,14 +52,14 @@ $config = [
     [
         'datasets' => [
             'kokorowatari/local_share' => [
-                'retention_policy' => $default_retention_policy,
+                'retention_policy' => $short_retention_policy,
             ],
         ],
     ],
     [
         'datasets' => [
             'kokorowatari/media' => [
-                'retention_policy' => $default_retention_policy,
+                'retention_policy' => $short_retention_policy,
             ],
         ],
     ],
@@ -67,20 +67,6 @@ $config = [
         'datasets' => [
             'kokorowatari/media_archives' => [
                 'retention_policy' => $default_retention_policy,
-            ],
-        ],
-    ],
-    [
-        'datasets' => [
-            'kokorowatari/system' => [
-                'retention_policy' => $default_retention_policy,
-            ],
-        ],
-    ],
-    [
-        'datasets' => [
-            'kokorowatari/tm_mbp' => [
-                'retention_policy' => $short_retention_policy,
             ],
         ],
     ],
