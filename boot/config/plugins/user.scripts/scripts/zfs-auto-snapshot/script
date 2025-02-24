@@ -7,7 +7,10 @@
 
 $config = [
     [
-        'domain' => 'TSUKIHI',
+        'domain' => [
+            'name' => 'TSUKIHI',
+            'trim_schedule' => 'daily',
+        ],
         'datasets' => [
             'kokorowatari/domains/TSUKIHI/vdisk_c' => [
                 'retention_policy' => [
@@ -46,6 +49,65 @@ enum LOG_LEVEL: string
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
+const RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/runtime.json';
+
+class RuntimeState
+{
+    public array $state = [];
+    private mixed $runtime_fp;
+
+    public function __construct()
+    {
+        $runtime_fp = fopen(RUNTIME_FILE, 'c+');
+        if ($runtime_fp === false) {
+            throw new Exception('Failed to open runtime file');
+        }
+        if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
+            throw new Exception('Failed to lock runtime file, other instance is running');
+        }
+        $this->runtime_fp = $runtime_fp;
+
+        $file_size = filesize(RUNTIME_FILE);
+        if ($file_size === 0) {
+            $this->state = [];
+        } else if ($file_size === false) {
+            throw new Exception('Failed to get runtime file size');
+        } else {
+            $file_contents = fread($runtime_fp, $file_size);
+            if ($file_contents === false) {
+                throw new Exception('Failed to read runtime file contents');
+            }
+            $state = json_decode($file_contents, true);
+            if (!is_array($state)) {
+                throw new Exception('Failed to decode runtime file contents');
+            }
+            $this->state = $state;
+        }
+    }
+
+    public function commit(): void
+    {
+        if (!ftruncate($this->runtime_fp, 0)) {
+            throw new Exception('Failed to truncate runtime file');
+        }
+        if (!rewind($this->runtime_fp)) {
+            throw new Exception('Failed to rewind runtime file');
+        }
+        $json_state = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json_state === false) {
+            throw new Exception('Failed to encode runtime state');
+        }
+        if (fwrite($this->runtime_fp, $json_state) !== strlen($json_state)) {
+            throw new Exception('Failed to write runtime state');
+        }
+        if (!flock($this->runtime_fp, LOCK_UN)) {
+            throw new Exception('Failed to unlock runtime file');
+        }
+        if (!fclose($this->runtime_fp)) {
+            throw new Exception('Failed to close runtime file');
+        }
+    }
+}
 
 function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 {
@@ -136,7 +198,7 @@ function cleanup_snapshots(string $dataset, array $snapshots, array $retention_p
     $current_time = time();
 
     $keep_all_within = $retention_policy['keep_all_within'] ?? null;
-    if ($keep_all_within !== null){
+    if ($keep_all_within !== null) {
         if (!is_int($keep_all_within)) {
             logger('Invalid keep_all_within retention rule for dataset ' . $dataset . ': ' . json_encode($retention_policy), LOG_LEVEL::ERROR);
             return;
@@ -221,7 +283,7 @@ function fs_trim(string $domain): void
     }
 }
 
-function snapshot_txg(array $txg): void
+function snapshot_txg(array $txg, RuntimeState $runtime): void
 {
     $datasets = $txg['datasets'] ?? null;
     if (!is_array($datasets)) {
@@ -258,7 +320,7 @@ function snapshot_txg(array $txg): void
         $cleanup_args[] = [$dataset, $existing_snapshots, $retention_policy];
     }
 
-    $domain = $txg['domain'] ?? null;
+    $domain = $txg['domain']['name'] ?? null;
     $domain_is_running = false;
     if ($domain !== null) {
         if (!is_string($domain)) {
@@ -271,7 +333,29 @@ function snapshot_txg(array $txg): void
         }
         $domain_is_running = $domain_state === 'running';
         if ($domain_is_running) {
-            fs_trim($domain);
+            $trim_schedule = $txg['domain']['trim_schedule'] ?? null;
+            if ($trim_schedule !== null) {
+                if (!is_string($trim_schedule)) {
+                    logger('Invalid trim schedule for domain ' . $domain . ': ' . json_encode($txg), LOG_LEVEL::ERROR);
+                    return;
+                }
+                $trim_date_patterns = [
+                    'daily' => 'Y-m-d',
+                    'weekly' => 'Y-W',
+                    'monthly' => 'Y-m',
+                ];
+                $trim_date_pattern = $trim_date_patterns[$trim_schedule] ?? null;
+                if ($trim_date_pattern === null) {
+                    logger('Invalid trim schedule for domain ' . $domain . ': ' . $trim_schedule, LOG_LEVEL::ERROR);
+                    return;
+                }
+                $last_trimmed = $runtime->state['domains'][$domain]['last_trimmed'] ?? null;
+                $current_trim_date = date($trim_date_pattern);
+                if ($last_trimmed !== $current_trim_date) {
+                    fs_trim($domain);
+                    $runtime->state['domains'][$domain]['last_trimmed'] = $current_trim_date;
+                }
+            }
             if (!fs_freeze($domain)) {
                 return;
             }
@@ -293,12 +377,24 @@ function snapshot_txg(array $txg): void
 
 function main(array $config): void
 {
+    try {
+        $runtime = new RuntimeState();
+    } catch (Exception $e) {
+        logger($e->getMessage(), LOG_LEVEL::ERROR);
+        return;
+    }
     foreach ($config as $txg) {
         if (!is_array($txg)) {
             logger('Invalid transaction group configuration: ' . json_encode($txg), LOG_LEVEL::ERROR);
             continue;
         }
-        snapshot_txg($txg);
+        snapshot_txg($txg, $runtime);
+    }
+    try {
+        $runtime->commit();
+    } catch (Exception $e) {
+        logger($e->getMessage(), LOG_LEVEL::ERROR);
+        return;
     }
 }
 
