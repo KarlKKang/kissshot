@@ -5,6 +5,18 @@
 
 # Run on schedule: 0 * * * *
 
+$default_retention_policy = [
+    'keep_all_within' => 24 * 60 * 60,
+    'keep_hourly_within' => 3 * 24 * 60 * 60,
+    'keep_daily_within' => 30 * 24 * 60 * 60,
+    'keep_weekly_within' => 365 * 24 * 60 * 60 / 4,
+    'keep_monthly_within' => 365 * 24 * 60 * 60,
+];
+$short_retention_policy = [
+    'keep_all_within' => 24 * 60 * 60,
+    'keep_daily_within' => 7 * 24 * 60 * 60,
+];
+
 $config = [
     [
         'domain' => [
@@ -13,30 +25,64 @@ $config = [
         ],
         'datasets' => [
             'kokorowatari/domains/TSUKIHI/vdisk_c' => [
-                'retention_policy' => [
-                    'keep_all_within' => 24 * 60 * 60,
-                    'keep_hourly_within' => 3 * 24 * 60 * 60,
-                    'keep_daily_within' => 30 * 24 * 60 * 60,
-                    'keep_weekly_within' => 365 * 24 * 60 * 60 / 4,
-                    'keep_monthly_within' => 365 * 24 * 60 * 60,
-                ],
+                'retention_policy' => $default_retention_policy,
             ],
             'kokorowatari/domains/TSUKIHI/vdisk_d' => [
-                'retention_policy' => [
-                    'keep_all_within' => 24 * 60 * 60,
-                    'keep_hourly_within' => 3 * 24 * 60 * 60,
-                    'keep_daily_within' => 30 * 24 * 60 * 60,
-                    'keep_weekly_within' => 365 * 24 * 60 * 60 / 4,
-                    'keep_monthly_within' => 365 * 24 * 60 * 60,
-                ],
+                'retention_policy' => $default_retention_policy,
             ],
             'kokorowatari/domains/TSUKIHI/vdisk_e' => [
-                'retention_policy' => [
-                    'keep_all_within' => 24 * 60 * 60,
-                    'keep_daily_within' => 7 * 24 * 60 * 60,
-                ],
+                'retention_policy' => $short_retention_policy,
             ],
         ]
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/cloud_backups' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/document_archives' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/local_share' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/media' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/media_archives' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/system' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/tm_mbp' => [
+                'retention_policy' => $short_retention_policy,
+            ],
+        ],
     ],
 ];
 
