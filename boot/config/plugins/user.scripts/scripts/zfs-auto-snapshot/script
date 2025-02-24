@@ -121,14 +121,15 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 function system_command(string $command, array &$output = []): bool
 {
     $command .= ' 2>&1';
-    logger($command);
     try {
         $result = exec($command, $output, $retval);
     } catch (ValueError $e) {
+        logger($command, LOG_LEVEL::ERROR);
         logger('Failed to execute system command: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return false;
     }
     if ($retval !== 0 || $result === false) {
+        logger($command, LOG_LEVEL::ERROR);
         logger('Command failed with exit code ' . $retval, LOG_LEVEL::ERROR);
         foreach ($output as $line) {
             logger($line, LOG_LEVEL::ERROR);
