@@ -3,7 +3,7 @@
 #description=This script will take and manage the snapshots of ZFS datasets
 #arrayStarted=true
 
-# Run on schedule: 0 3 * * *
+# Run on schedule: 0 * * * *
 
 $config = [
     [
