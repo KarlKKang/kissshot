@@ -87,6 +87,7 @@ class RuntimeState
 {
     public array $state = [];
     private mixed $runtime_fp;
+    private string $original_state_str;
 
     public function __construct()
     {
@@ -102,6 +103,7 @@ class RuntimeState
         $file_size = filesize(RUNTIME_FILE);
         if ($file_size === 0) {
             $this->state = [];
+            $this->original_state_str = '';
         } else if ($file_size === false) {
             throw new Exception('Failed to get runtime file size');
         } else {
@@ -109,6 +111,7 @@ class RuntimeState
             if ($file_contents === false) {
                 throw new Exception('Failed to read runtime file contents');
             }
+            $this->original_state_str = $file_contents;
             $state = json_decode($file_contents, true);
             if (!is_array($state)) {
                 throw new Exception('Failed to decode runtime file contents');
@@ -119,19 +122,23 @@ class RuntimeState
 
     public function commit(): void
     {
-        if (!ftruncate($this->runtime_fp, 0)) {
-            throw new Exception('Failed to truncate runtime file');
-        }
-        if (!rewind($this->runtime_fp)) {
-            throw new Exception('Failed to rewind runtime file');
-        }
-        $json_state = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if ($json_state === false) {
+        $state_str = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($state_str === false) {
             throw new Exception('Failed to encode runtime state');
         }
-        if (fwrite($this->runtime_fp, $json_state) !== strlen($json_state)) {
-            throw new Exception('Failed to write runtime state');
+
+        if ($state_str !== $this->original_state_str) {
+            if (!ftruncate($this->runtime_fp, 0)) {
+                throw new Exception('Failed to truncate runtime file');
+            }
+            if (!rewind($this->runtime_fp)) {
+                throw new Exception('Failed to rewind runtime file');
+            }
+            if (fwrite($this->runtime_fp, $state_str) !== strlen($state_str)) {
+                throw new Exception('Failed to write runtime state');
+            }
         }
+
         if (!flock($this->runtime_fp, LOCK_UN)) {
             throw new Exception('Failed to unlock runtime file');
         }
