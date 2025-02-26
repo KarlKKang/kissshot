@@ -2,13 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "zfs.encryption.automount">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.02.15">
-<!ENTITY md5       "e96c80c183f56ba28f69483cdfb8f02a">
+<!ENTITY version   "2025.02.26">
+<!ENTITY md5       "61aaea6b22e4bdf96c06fdaa6a50a4b3">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.02.26
+- Auto mount docker ZVOL.
+- Continue to mount other ZFS datasets if one fails.
+
 ###2025.02.15
 - Auto unlock encrypted ZFS volumes.
 

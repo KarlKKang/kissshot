@@ -21,13 +21,13 @@ for d in "${encrypted_datasets[@]}"; do
     out="$(mkdir -p "${mountpoint}" 2>&1 && chattr +i "${mountpoint}" 2>&1)"
     if (($? != 0)); then
         zfs_automount_logger "Failed to create directory for ${d}: ${out}" "error"
-        exit 1
+        continue
     fi
 
     out="$(zfs load-key -r "${d}" 2>&1)"
     if (($? != 0)); then
         zfs_automount_logger "Failed to load key for ${d}: ${out}" "error"
-        exit 1
+        continue
     fi
 
     out="$(zfs mount "${d}" 2>&1)"
@@ -35,7 +35,7 @@ for d in "${encrypted_datasets[@]}"; do
         zfs_automount_logger "Mounted ZFS dataset ${d}"
     else
         zfs_automount_logger "Failed to mount ZFS dataset ${d}: ${out}" "error"
-        exit 1
+        continue
     fi
 done
 
@@ -48,7 +48,7 @@ for d in "${encrypted_datasets[@]}"; do
         zfs_automount_logger "Mounted ZFS dataset ${d}"
     else
         zfs_automount_logger "Failed to load key for ${d}: ${out}" "error"
-        exit 1
+        continue
     fi
 done
 
@@ -57,7 +57,7 @@ docker_mountpoint="/mnt/kokorowatari/system/docker"
 out="$(mkdir -p "${docker_mountpoint}" 2>&1 && chattr +i "${docker_mountpoint}" 2>&1)"
 if (($? != 0)); then
     zfs_automount_logger "Failed to prepare Docker mountpoint: ${out}" "error"
-    exit 1
+    exit
 fi
 
 out="$(mount /dev/zvol/kokorowatari/system/docker "${docker_mountpoint}" 2>&1)"
@@ -65,5 +65,4 @@ if (($? == 0)); then
     zfs_automount_logger "Mounted Docker ZFS volume"
 else
     zfs_automount_logger "Failed to mount Docker ZFS volume: ${out}" "error"
-    exit 1
 fi

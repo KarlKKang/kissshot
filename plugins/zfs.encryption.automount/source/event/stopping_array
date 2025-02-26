@@ -7,5 +7,4 @@ else
     msg="Failed to unload ZFS encryption keys: ${out}"
     /usr/local/emhttp/webGui/scripts/notify -s "ZFS Automount" -d "$msg" -i alert
     logger -p user.err -t "zfs_automount" "$msg"
-    exit 1
 fi
