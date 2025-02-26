@@ -51,3 +51,19 @@ for d in "${encrypted_datasets[@]}"; do
         exit 1
     fi
 done
+
+
+docker_mountpoint="/mnt/kokorowatari/system/docker"
+out="$(mkdir -p "${docker_mountpoint}" 2>&1 && chattr +i "${docker_mountpoint}" 2>&1)"
+if (($? != 0)); then
+    zfs_automount_logger "Failed to prepare Docker mountpoint: ${out}" "error"
+    exit 1
+fi
+
+out="$(mount /dev/zvol/kokorowatari/system/docker "${docker_mountpoint}" 2>&1)"
+if (($? == 0)); then
+    zfs_automount_logger "Mounted Docker ZFS volume"
+else
+    zfs_automount_logger "Failed to mount Docker ZFS volume: ${out}" "error"
+    exit 1
+fi

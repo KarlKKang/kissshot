@@ -1,0 +1,11 @@
+#!/bin/bash
+
+out="$(umount /mnt/kokorowatari/system/docker 2>&1)"
+if (($? == 0)); then
+    logger -t "zfs_automount" "Docker ZFS volume unmounted"
+else
+    msg="Failed to unmount Docker ZFS volume: ${out}"
+    /usr/local/emhttp/webGui/scripts/notify -s "ZFS Automount" -d "$msg" -i alert
+    logger -p user.err -t "zfs_automount" "$msg"
+    exit 1
+fi
