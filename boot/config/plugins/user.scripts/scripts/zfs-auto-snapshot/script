@@ -107,16 +107,17 @@ enum LOG_LEVEL: string
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
 const RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/runtime.json';
+const RESTIC_RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/restic_runtime.json';
 
-class RuntimeState
+abstract class RuntimeStateTemplate
 {
     public array $state = [];
     private mixed $runtime_fp;
     private string $original_state_str;
 
-    public function __construct()
+    public function __construct(string $file_path)
     {
-        $runtime_fp = fopen(RUNTIME_FILE, 'c+');
+        $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');
         }
@@ -125,7 +126,7 @@ class RuntimeState
         }
         $this->runtime_fp = $runtime_fp;
 
-        $file_size = filesize(RUNTIME_FILE);
+        $file_size = filesize($file_path);
         if ($file_size === 0) {
             $this->state = [];
             $this->original_state_str = '';
@@ -170,6 +171,22 @@ class RuntimeState
         if (!fclose($this->runtime_fp)) {
             throw new Exception('Failed to close runtime file');
         }
+    }
+}
+
+class RuntimeState extends RuntimeStateTemplate
+{
+    public function __construct()
+    {
+        parent::__construct(RUNTIME_FILE);
+    }
+}
+
+class ResticRuntimeState extends RuntimeStateTemplate
+{
+    public function __construct()
+    {
+        parent::__construct(RESTIC_RUNTIME_FILE);
     }
 }
 
@@ -453,7 +470,7 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
     $snapshots_to_restic = array_merge($snapshots_to_restic, $txg_snapshots_to_restic);
 }
 
-function send_to_restic(array $snapshots_to_restic, RuntimeState $runtime): void
+function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime): void
 {
     if (count($snapshots_to_restic) === 0) {
         return;
@@ -488,7 +505,7 @@ function main(array $config): void
     try {
         $runtime = new RuntimeState();
     } catch (Exception $e) {
-        logger($e->getMessage(), LOG_LEVEL::ERROR);
+        logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
     }
     $snapshots_to_restic = [];
@@ -499,11 +516,24 @@ function main(array $config): void
         }
         snapshot_txg($txg, $runtime, $snapshots_to_restic);
     }
+    try {
+        $runtime->commit();
+    } catch (Exception $e) {
+        logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+        return;
+    }
+
+    try {
+        $runtime = new ResticRuntimeState();
+    } catch (Exception $e) {
+        logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+        return;
+    }
     send_to_restic($snapshots_to_restic, $runtime);
     try {
         $runtime->commit();
     } catch (Exception $e) {
-        logger($e->getMessage(), LOG_LEVEL::ERROR);
+        logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
     }
 }
