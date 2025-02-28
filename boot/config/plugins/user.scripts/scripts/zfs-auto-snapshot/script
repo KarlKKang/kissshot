@@ -476,7 +476,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
 
-    $cmd_docker_prefix = 'docker run -it --rm --name restic --hostname KISSSHOT -v /mnt/user/appdata/restic:/config:ro -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key -e RESTIC_PASSWORD_FILE=/config/repository.key';
+    $cmd_docker_prefix = 'docker run -i --rm --name restic --hostname KISSSHOT -v /mnt/user/appdata/restic:/config:ro -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key -e RESTIC_PASSWORD_FILE=/config/repository.key';
     $cmd = $cmd_docker_prefix;
     foreach ($snapshots_to_restic as $dataset => $snapshot_name) {
         $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
