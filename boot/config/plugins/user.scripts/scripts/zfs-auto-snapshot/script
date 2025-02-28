@@ -78,6 +78,15 @@ enum LOG_LEVEL: string
     case INFO = 'notice';
     case WARNING = 'warning';
     case ERROR = 'err';
+
+    public function unraid_level(): string
+    {
+        return match ($this) {
+            self::INFO => 'normal',
+            self::WARNING => 'warning',
+            self::ERROR => 'alert',
+        };
+    }
 }
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -151,6 +160,13 @@ class RuntimeState
 
 function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 {
+    if ($level !== LOG_LEVEL::INFO) {
+        try {
+            exec('/usr/local/emhttp/webGui/scripts/notify -e "ZFS Auto Snapshot" -s ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
+        } catch (ValueError $e) {
+            echo 'Failed to send notification: ' . $e->getMessage() . PHP_EOL;
+        }
+    }
     try {
         exec('logger -t zfs-auto-snapshot -p user.' . $level->value . ' ' . escapeshellarg($message));
     } catch (ValueError $e) {
