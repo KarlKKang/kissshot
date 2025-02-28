@@ -117,6 +117,10 @@ abstract class RuntimeStateTemplate
 
     public function __construct(string $file_path)
     {
+        $runtime_dir = dirname($file_path);
+        if (!is_dir($runtime_dir) && !mkdir($runtime_dir, 0777, true)) {
+            throw new Exception('Failed to create runtime directory');
+        }
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');
