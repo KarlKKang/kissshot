@@ -92,7 +92,7 @@ enum LOG_LEVEL: string
 {
     case INFO = 'notice';
     case WARNING = 'warning';
-    case ERROR = 'err';
+    case ERROR = 'error';
 
     public function unraid_level(): string
     {
@@ -199,8 +199,9 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
             echo 'Failed to send notification: ' . $e->getMessage() . PHP_EOL;
         }
     }
+    $message = '[' . $level->value . '] ' . $message;
     try {
-        exec('logger -t zfs-auto-snapshot -p user.' . $level->value . ' ' . escapeshellarg($message));
+        exec('logger -t zfs-auto-snapshot ' . escapeshellarg($message));
     } catch (ValueError $e) {
         echo 'Failed to log message: ' . $e->getMessage() . PHP_EOL;
     }
