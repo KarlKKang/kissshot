@@ -38,7 +38,21 @@ $config = [
     ],
     [
         'datasets' => [
+            'kokorowatari/appdata' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
             'kokorowatari/cloud_backups' => [
+                'retention_policy' => $default_retention_policy,
+            ],
+        ],
+    ],
+    [
+        'datasets' => [
+            'kokorowatari/documents' => [
                 'retention_policy' => $default_retention_policy,
             ],
         ],
