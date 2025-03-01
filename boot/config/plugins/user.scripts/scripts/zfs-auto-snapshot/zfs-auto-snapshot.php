@@ -505,7 +505,8 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     }
 
     $last_checked = $runtime->state['check'] ?? null;
-    if ($last_checked === $current_month) {
+    $current_week = date('Y-W');
+    if ($last_checked === $current_week) {
         return;
     }
     $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? null;
@@ -514,9 +515,9 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     }
     $check_subset_denominator = $runtime->state['check_subset_denominator'] ?? null;
     if (!is_int($check_subset_denominator) || $check_subset_denominator < 1) {
-        $check_subset_denominator = 3;
+        $check_subset_denominator = 4;
     }
-    $runtime->state['check'] = $current_month;
+    $runtime->state['check'] = $current_week;
     $runtime->state['check_subset_numerator'] = ($check_subset_numerator + 1) % $check_subset_denominator;
     $runtime->state['check_subset_denominator'] = $check_subset_denominator;
     $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . ($check_subset_numerator % $check_subset_denominator + 1) . '/' . $check_subset_denominator;
