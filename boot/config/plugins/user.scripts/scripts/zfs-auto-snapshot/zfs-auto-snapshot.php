@@ -498,6 +498,20 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     if (!system_command($cmd)) {
         logger('Failed to prune restic snapshots', LOG_LEVEL::ERROR);
     }
+
+    $last_checked = $runtime->state['check'] ?? null;
+    if ($last_checked === $current_month) {
+        return;
+    }
+    $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? 0;
+    $check_subset_denominator = $runtime->state['check_subset_denominator'] ?? 3;
+    $runtime->state['check'] = $current_month;
+    $runtime->state['check_subset_numerator'] = ($check_subset_numerator + 1) % $check_subset_denominator;
+    $runtime->state['check_subset_denominator'] = $check_subset_denominator;
+    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . ($check_subset_denominator % $check_subset_numerator + 1) . '/' . $check_subset_denominator;
+    if (!system_command($cmd)) {
+        logger('Error during restic check', LOG_LEVEL::ERROR);
+    }
 }
 
 function main(array $config): void
