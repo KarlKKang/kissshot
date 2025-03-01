@@ -520,6 +520,9 @@ function main(array $config): void
 {
     try {
         $runtime = new RuntimeState();
+    } catch (FileLockException $e){
+        logger('Failed to lock runtime file, another instance is running', LOG_LEVEL::WARNING);
+        return;
     } catch (Exception $e) {
         logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
@@ -534,9 +537,6 @@ function main(array $config): void
     }
     try {
         $runtime->commit();
-    } catch (FileLockException $e){
-        logger('Failed to lock runtime file, another instance is running', LOG_LEVEL::WARNING);
-        return;
     } catch (Exception $e) {
         logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
