@@ -482,7 +482,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
     }
     $cmd .= ' restic/restic backup -q';
-    $last_force_run = $runtime->state['restic_force_run'] ?? null;
+    $last_force_run = $runtime->state['force_run'] ?? null;
     $current_month = date('Y-m');
     if ($last_force_run !== $current_month) {
         $cmd .= ' --force';
@@ -493,7 +493,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
 
-    $runtime->state['restic_force_run'] = $current_month;
+    $runtime->state['force_run'] = $current_month;
     $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 1d --keep-within-hourly 3d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --prune';
     if (!system_command($cmd)) {
         logger('Failed to prune restic snapshots', LOG_LEVEL::ERROR);
