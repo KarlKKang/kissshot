@@ -1,14 +1,17 @@
 <?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
-<!ENTITY name      "zfs.encryption.automount">
+<!ENTITY name      "zfs.automount">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.02.26">
-<!ENTITY md5       "61aaea6b22e4bdf96c06fdaa6a50a4b3">
+<!ENTITY version   "2025.02.28">
+<!ENTITY md5       "cc2d4eb41e4452ede4366cac0223ae1d">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.02.28
+- Migrate to PHP.
+
 ###2025.02.26
 - Auto mount docker ZVOL.
 - Continue to mount other ZFS datasets if one fails.
