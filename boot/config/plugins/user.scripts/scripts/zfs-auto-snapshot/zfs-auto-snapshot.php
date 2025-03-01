@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $default_retention_policy = [
     'keep_all_within' => 24 * 60 * 60,
     'keep_hourly_within' => 3 * 24 * 60 * 60,
@@ -506,17 +509,17 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
     $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? null;
-    if (!is_int($check_subset_numerator)) {
+    if (!is_int($check_subset_numerator) || $check_subset_numerator < 0) {
         $check_subset_numerator = 0;
     }
     $check_subset_denominator = $runtime->state['check_subset_denominator'] ?? null;
-    if (!is_int($check_subset_denominator)) {
+    if (!is_int($check_subset_denominator) || $check_subset_denominator < 1) {
         $check_subset_denominator = 3;
     }
     $runtime->state['check'] = $current_month;
     $runtime->state['check_subset_numerator'] = ($check_subset_numerator + 1) % $check_subset_denominator;
     $runtime->state['check_subset_denominator'] = $check_subset_denominator;
-    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . ($check_subset_denominator % $check_subset_numerator + 1) . '/' . $check_subset_denominator;
+    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . ($check_subset_numerator % $check_subset_denominator + 1) . '/' . $check_subset_denominator;
     if (!system_command($cmd)) {
         logger('Error during restic check', LOG_LEVEL::ERROR);
     }
