@@ -505,8 +505,14 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     if ($last_checked === $current_month) {
         return;
     }
-    $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? 0;
-    $check_subset_denominator = $runtime->state['check_subset_denominator'] ?? 3;
+    $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? null;
+    if (!is_int($check_subset_numerator)) {
+        $check_subset_numerator = 0;
+    }
+    $check_subset_denominator = $runtime->state['check_subset_denominator'] ?? null;
+    if (!is_int($check_subset_denominator)) {
+        $check_subset_denominator = 3;
+    }
     $runtime->state['check'] = $current_month;
     $runtime->state['check_subset_numerator'] = ($check_subset_numerator + 1) % $check_subset_denominator;
     $runtime->state['check_subset_denominator'] = $check_subset_denominator;
