@@ -104,6 +104,8 @@ const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
 const RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/runtime.json';
 const RESTIC_RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/restic_runtime.json';
 
+class FileLockException extends Exception {}
+
 abstract class RuntimeStateTemplate
 {
     public array $state = [];
@@ -121,7 +123,7 @@ abstract class RuntimeStateTemplate
             throw new Exception('Failed to open runtime file');
         }
         if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
-            throw new Exception('Failed to lock runtime file, other instance is running');
+            throw new FileLockException();
         }
         $this->runtime_fp = $runtime_fp;
 
@@ -532,6 +534,9 @@ function main(array $config): void
     }
     try {
         $runtime->commit();
+    } catch (FileLockException $e){
+        logger('Failed to lock runtime file, another instance is running', LOG_LEVEL::WARNING);
+        return;
     } catch (Exception $e) {
         logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
@@ -539,6 +544,9 @@ function main(array $config): void
 
     try {
         $runtime = new ResticRuntimeState();
+    } catch (FileLockException $e){
+        logger('Failed to lock restic runtime file, another instance is running', LOG_LEVEL::WARNING);
+        return;
     } catch (Exception $e) {
         logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return;
