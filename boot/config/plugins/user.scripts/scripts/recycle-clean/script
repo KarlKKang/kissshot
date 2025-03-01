@@ -4,4 +4,4 @@
 
 # Run on schedule: 0 1 * * *
 
-nohup php /boot/config/plugins/recycle-clean/recycle-clean.php &
+nohup php /boot/config/plugins/user.scripts/scripts/recycle-clean/recycle-clean.php &
