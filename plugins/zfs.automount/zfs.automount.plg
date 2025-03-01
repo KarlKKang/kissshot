@@ -3,7 +3,7 @@
 <!ENTITY name      "zfs.automount">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.02.28">
-<!ENTITY md5       "cc2d4eb41e4452ede4366cac0223ae1d">
+<!ENTITY md5       "d8b03acf4a87d107ff695727010d1ce1">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
