@@ -16,7 +16,8 @@ with open(zfs_conf_path, 'w') as f:
     f.write(f'options zfs zfs_arc_lotsfree_percent={round(10 * percent_available_ram)}\n')
 
     # default: max(1/2 of system memory, 67108864)
-    zfs_arc_max = round(total_available_ram / 2)
+    #  customized to 80% of system memory
+    zfs_arc_max = round(total_available_ram * 0.8)
     if zfs_arc_max > 67108864:
         f.write(f'options zfs zfs_arc_max={zfs_arc_max}\n')
 
