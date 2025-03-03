@@ -29,14 +29,14 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
         try {
             exec('/usr/local/emhttp/webGui/scripts/notify -e "ZFS Automount" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
         } catch (ValueError $e) {
-            echo 'Failed to send notification: ' . $e->getMessage() . PHP_EOL;
+            echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
         }
     }
     $message = '[' . $level->value . '] ' . $message;
     try {
         exec('logger -t zfs-automount ' . escapeshellarg($message));
     } catch (ValueError $e) {
-        echo 'Failed to log message: ' . $e->getMessage() . PHP_EOL;
+        echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }
 }
 
@@ -47,7 +47,7 @@ function system_command(string $command, array &$output = []): bool
         $result = exec($command, $output, $retval);
     } catch (ValueError $e) {
         logger($command, LOG_LEVEL::ERROR);
-        logger('Failed to execute system command: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+        logger('Cannot execute system command: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return false;
     }
     if ($retval !== 0 || $result === false) {
@@ -71,7 +71,7 @@ function get_encrypted_datasets(): array|false
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
         if (count($line) !== 3) {
-            logger('Failed to parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
+            logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
             return false;
         }
         [$name, $keylocation, $mountpoint] = $line;
@@ -89,11 +89,11 @@ function get_encrypted_datasets(): array|false
 function create_mountpoint(string $mountpoint): bool
 {
     if (!is_dir($mountpoint) && !mkdir($mountpoint, 0777, true)) {
-        logger('Failed to create mountpoint: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Cannot create mountpoint: ' . $mountpoint, LOG_LEVEL::ERROR);
         return false;
     }
     if (!system_command('chattr +i ' . escapeshellarg($mountpoint))) {
-        logger('Failed to set mountpoint immutable: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Cannot set mountpoint immutable: ' . $mountpoint, LOG_LEVEL::ERROR);
         return false;
     }
     return true;
@@ -107,7 +107,7 @@ function mount(string $dataset, string|null $mountpoint): bool
         }
     }
     if (!system_command('zfs load-key ' . escapeshellarg($dataset))) {
-        logger('Failed to load key for dataset: ' . $dataset, LOG_LEVEL::ERROR);
+        logger('Cannot load key for dataset: ' . $dataset, LOG_LEVEL::ERROR);
         return false;
     }
     if ($mountpoint === null) {
@@ -115,7 +115,7 @@ function mount(string $dataset, string|null $mountpoint): bool
         return true;
     }
     if (!system_command('zfs mount -R ' . escapeshellarg($dataset))) {
-        logger('Failed to mount dataset: ' . $dataset, LOG_LEVEL::ERROR);
+        logger('Cannot mount dataset: ' . $dataset, LOG_LEVEL::ERROR);
         return false;
     }
     logger('Mounted dataset: ' . $dataset . ' at ' . $mountpoint);
@@ -128,7 +128,7 @@ function mount_zvol(string $dataset, string $mountpoint): bool
         return false;
     }
     if (!system_command('mount ' . escapeshellarg('/dev/zvol/' . $dataset) . ' ' . escapeshellarg($mountpoint))) {
-        logger('Failed to mount ZFS volume: ' . $dataset, LOG_LEVEL::ERROR);
+        logger('Cannot mount ZFS volume: ' . $dataset, LOG_LEVEL::ERROR);
         return false;
     }
     logger('Mounted ZFS volume: ' . $dataset . ' at ' . $mountpoint);
@@ -138,7 +138,7 @@ function mount_zvol(string $dataset, string $mountpoint): bool
 function unload_all_keys(): void
 {
     if (!system_command('zfs unload-key -a')) {
-        logger('Failed to unload all keys', LOG_LEVEL::ERROR);
+        logger('Cannot unload all keys', LOG_LEVEL::ERROR);
         return;
     }
     logger('All keys unloaded');
@@ -147,7 +147,7 @@ function unload_all_keys(): void
 function unmount_zvol(string $mountpoint): void
 {
     if (!system_command('umount ' . escapeshellarg($mountpoint))) {
-        logger('Failed to unmount ZFS volume: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Cannot unmount ZFS volume: ' . $mountpoint, LOG_LEVEL::ERROR);
         return;
     }
     logger('Unmounted ZFS volume: ' . $mountpoint);

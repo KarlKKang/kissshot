@@ -119,7 +119,7 @@ abstract class RuntimeStateTemplate
     public function __construct(string $file_name)
     {
         if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
-            throw new Exception('Failed to create runtime directory');
+            throw new Exception('Cannot create runtime directory');
         }
         $file_path = RUNTIME_DIR . '/' . $file_name;
         if (!file_exists($file_path)) {
@@ -127,7 +127,7 @@ abstract class RuntimeStateTemplate
         }
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
-            throw new Exception('Failed to open runtime file');
+            throw new Exception('Cannot open runtime file');
         }
         if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
             throw new FileLockException();
@@ -139,16 +139,16 @@ abstract class RuntimeStateTemplate
             $this->state = [];
             $this->original_state_str = '';
         } else if ($file_size === false) {
-            throw new Exception('Failed to get runtime file size');
+            throw new Exception('Cannot get runtime file size');
         } else {
             $file_contents = fread($runtime_fp, $file_size);
             if ($file_contents === false) {
-                throw new Exception('Failed to read runtime file contents');
+                throw new Exception('Cannot read runtime file contents');
             }
             $this->original_state_str = $file_contents;
             $state = json_decode($file_contents, true);
             if (!is_array($state)) {
-                throw new Exception('Failed to decode runtime file contents');
+                throw new Exception('Cannot decode runtime file contents');
             }
             $this->state = $state;
         }
@@ -158,26 +158,26 @@ abstract class RuntimeStateTemplate
     {
         $state_str = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($state_str === false) {
-            throw new Exception('Failed to encode runtime state');
+            throw new Exception('Cannot encode runtime state');
         }
 
         if ($state_str !== $this->original_state_str) {
             if (!ftruncate($this->runtime_fp, 0)) {
-                throw new Exception('Failed to truncate runtime file');
+                throw new Exception('Cannot truncate runtime file');
             }
             if (!rewind($this->runtime_fp)) {
-                throw new Exception('Failed to rewind runtime file');
+                throw new Exception('Cannot rewind runtime file');
             }
             if (fwrite($this->runtime_fp, $state_str) !== strlen($state_str)) {
-                throw new Exception('Failed to write runtime state');
+                throw new Exception('Cannot write runtime state');
             }
         }
 
         if (!flock($this->runtime_fp, LOCK_UN)) {
-            throw new Exception('Failed to unlock runtime file');
+            throw new Exception('Cannot unlock runtime file');
         }
         if (!fclose($this->runtime_fp)) {
-            throw new Exception('Failed to close runtime file');
+            throw new Exception('Cannot close runtime file');
         }
     }
 }
@@ -204,14 +204,14 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
         try {
             exec('/usr/local/emhttp/webGui/scripts/notify -e "ZFS Auto Snapshot" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
         } catch (ValueError $e) {
-            echo 'Failed to send notification: ' . $e->getMessage() . PHP_EOL;
+            echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
         }
     }
     $message = '[' . $level->value . '] ' . $message;
     try {
         exec('logger -t zfs-auto-snapshot ' . escapeshellarg($message));
     } catch (ValueError $e) {
-        echo 'Failed to log message: ' . $e->getMessage() . PHP_EOL;
+        echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }
 }
 
@@ -222,7 +222,7 @@ function system_command(string $command, array &$output = []): bool
         $result = exec($command, $output, $retval);
     } catch (ValueError $e) {
         logger($command, LOG_LEVEL::ERROR);
-        logger('Failed to execute system command: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+        logger('Cannot execute system command: ' . $e->getMessage(), LOG_LEVEL::ERROR);
         return false;
     }
     if ($retval !== 0 || $result === false) {
@@ -244,7 +244,7 @@ function get_snapshots(string $dataset): array|false
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
         if (count($line) !== 2) {
-            logger('Failed to get snapshots for dataset ' . $dataset . ': ' . $line_str, LOG_LEVEL::ERROR);
+            logger('Cannot get snapshots for dataset ' . $dataset . ': ' . $line_str, LOG_LEVEL::ERROR);
             return false;
         }
         $snapshot_name = $line[0];
@@ -286,7 +286,7 @@ function destroy_snapshot(string $dataset, string $snapshot_name): void
 {
     $full_snapshot_name = $dataset . '@' . SNAPSHOT_PREFIX . $snapshot_name;
     if (!system_command('zfs destroy ' . escapeshellarg($full_snapshot_name))) {
-        logger('Failed to destroy snapshot ' . $full_snapshot_name, LOG_LEVEL::ERROR);
+        logger('Cannot destroy snapshot ' . $full_snapshot_name, LOG_LEVEL::ERROR);
     }
 }
 
@@ -347,7 +347,7 @@ function get_domain_state(string $domain): string|false
 {
     $output = [];
     if (!system_command('virsh domstate ' . escapeshellarg($domain), $output)) {
-        logger('Failed to get domain state for domain ' . $domain, LOG_LEVEL::ERROR);
+        logger('Cannot get domain state for domain ' . $domain, LOG_LEVEL::ERROR);
         return false;
     }
     $state = $output[0] ?? null;
@@ -362,7 +362,7 @@ function fs_freeze(string $domain): bool
 {
     $result = system_command('virsh domfsfreeze ' . escapeshellarg($domain));
     if (!$result) {
-        logger('Failed to freeze filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+        logger('Cannot freeze filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
     }
     return $result;
 }
@@ -370,14 +370,14 @@ function fs_freeze(string $domain): bool
 function fs_thaw(string $domain): void
 {
     if (!system_command('virsh domfsthaw ' . escapeshellarg($domain))) {
-        logger('Failed to thaw filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+        logger('Cannot thaw filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
     }
 }
 
 function fs_trim(string $domain): void
 {
     if (!system_command('virsh domfstrim ' . escapeshellarg($domain))) {
-        logger('Failed to trim filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+        logger('Cannot trim filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
     }
 }
 
@@ -498,14 +498,14 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     }
     $cmd .= ' /data';
     if (!system_command($cmd)) {
-        logger('Failed to send snapshots to restic', LOG_LEVEL::ERROR);
+        logger('Cannot send snapshots to restic', LOG_LEVEL::ERROR);
         return;
     }
 
     $runtime->state['force_run'] = $current_month;
     $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 1d --keep-within-hourly 3d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --prune';
     if (!system_command($cmd)) {
-        logger('Failed to prune restic snapshots', LOG_LEVEL::ERROR);
+        logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
     }
 
     $last_checked = $runtime->state['check'] ?? null;
@@ -535,7 +535,7 @@ function main(array $config): void
     try {
         $runtime = new RuntimeState();
     } catch (FileLockException $e) {
-        logger('Failed to lock runtime file, another instance is running', LOG_LEVEL::WARNING);
+        logger('Cannot lock runtime file, another instance is running', LOG_LEVEL::WARNING);
         return;
     } catch (Exception $e) {
         logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
@@ -559,7 +559,7 @@ function main(array $config): void
     try {
         $runtime = new ResticRuntimeState();
     } catch (FileLockException $e) {
-        logger('Failed to lock restic runtime file, another instance is running', LOG_LEVEL::WARNING);
+        logger('Cannot lock restic runtime file, another instance is running', LOG_LEVEL::WARNING);
         return;
     } catch (Exception $e) {
         logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);

@@ -30,7 +30,7 @@ class RuntimeState
     public function __construct()
     {
         if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
-            throw new Exception('Failed to create runtime directory');
+            throw new Exception('Cannot create runtime directory');
         }
         $file_path = RUNTIME_DIR . '/' . RUNTIME_FILE;
         if (!file_exists($file_path)) {
@@ -38,10 +38,10 @@ class RuntimeState
         }
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
-            throw new Exception('Failed to open runtime file');
+            throw new Exception('Cannot open runtime file');
         }
         if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
-            throw new Exception('Failed to lock runtime file, other instance is running');
+            throw new Exception('Cannot lock runtime file, other instance is running');
         }
         $this->runtime_fp = $runtime_fp;
     }
@@ -49,10 +49,10 @@ class RuntimeState
     public function commit(): void
     {
         if (!flock($this->runtime_fp, LOCK_UN)) {
-            throw new Exception('Failed to unlock runtime file');
+            throw new Exception('Cannot unlock runtime file');
         }
         if (!fclose($this->runtime_fp)) {
-            throw new Exception('Failed to close runtime file');
+            throw new Exception('Cannot close runtime file');
         }
     }
 }
@@ -63,7 +63,7 @@ class FileSystem
     {
         $files = scandir($dir);
         if ($files === false) {
-            logger('Failed to scan directory: ' . $dir, LOG_LEVEL::WARNING);
+            logger('Cannot scan directory: ' . $dir, LOG_LEVEL::WARNING);
             return false;
         }
         return array_diff($files, ['.', '..']);
@@ -72,7 +72,7 @@ class FileSystem
     public static function unlink(string $file): bool
     {
         if (!unlink($file)) {
-            logger('Failed to delete file: ' . $file, LOG_LEVEL::WARNING);
+            logger('Cannot delete file: ' . $file, LOG_LEVEL::WARNING);
             return false;
         }
         logger('Deleted file: ' . $file);
@@ -82,7 +82,7 @@ class FileSystem
     public static function rmdir(string $dir): bool
     {
         if (!rmdir($dir)) {
-            logger('Failed to delete directory: ' . $dir, LOG_LEVEL::WARNING);
+            logger('Cannot delete directory: ' . $dir, LOG_LEVEL::WARNING);
             return false;
         }
         logger('Deleted directory: ' . $dir);
@@ -93,7 +93,7 @@ class FileSystem
     {
         $stat = lstat($file);
         if ($stat === false) {
-            logger('Failed to stat file: ' . $file, LOG_LEVEL::WARNING);
+            logger('Cannot stat file: ' . $file, LOG_LEVEL::WARNING);
             return false;
         }
         return $stat;
@@ -106,14 +106,14 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
         try {
             exec('/usr/local/emhttp/webGui/scripts/notify -e "Recycle Clean" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
         } catch (ValueError $e) {
-            echo 'Failed to send notification: ' . $e->getMessage() . PHP_EOL;
+            echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
         }
     }
     $message = '[' . $level->value . '] ' . $message;
     try {
         exec('logger -t recycle-clean ' . escapeshellarg($message));
     } catch (ValueError $e) {
-        echo 'Failed to log message: ' . $e->getMessage() . PHP_EOL;
+        echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }
 }
 
@@ -128,7 +128,7 @@ function is_expired(string $file): bool
     foreach ($time_labels as $label) {
         $file_time = $stat[$label] ?? null;
         if ($file_time === null) {
-            logger('Failed to get ' . $label . ' for file: ' . $file, LOG_LEVEL::WARNING);
+            logger('Cannot get ' . $label . ' for file: ' . $file, LOG_LEVEL::WARNING);
             return false;
         }
         $file_times[$label] = $file_time;
