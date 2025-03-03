@@ -122,6 +122,9 @@ abstract class RuntimeStateTemplate
             throw new Exception('Failed to create runtime directory');
         }
         $file_path = RUNTIME_DIR . '/' . $file_name;
+        if (!file_exists($file_path)) {
+            logger('Runtime file not found, creating new one: ' . $file_path, LOG_LEVEL::WARNING);
+        }
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');

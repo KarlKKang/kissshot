@@ -32,7 +32,11 @@ class RuntimeState
         if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
             throw new Exception('Failed to create runtime directory');
         }
-        $runtime_fp = fopen(RUNTIME_DIR . '/' . RUNTIME_FILE, 'c+');
+        $file_path = RUNTIME_DIR . '/' . RUNTIME_FILE;
+        if (!file_exists($file_path)) {
+            logger('Runtime file not found, creating new one: ' . $file_path, LOG_LEVEL::WARNING);
+        }
+        $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');
         }
