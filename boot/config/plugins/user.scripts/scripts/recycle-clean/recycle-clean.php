@@ -71,6 +71,7 @@ class FileSystem
             logger('Failed to delete file: ' . $file, LOG_LEVEL::WARNING);
             return false;
         }
+        logger('Deleted file: ' . $file);
         return true;
     }
 
@@ -80,6 +81,7 @@ class FileSystem
             logger('Failed to delete directory: ' . $dir, LOG_LEVEL::WARNING);
             return false;
         }
+        logger('Deleted directory: ' . $dir);
         return true;
     }
 
