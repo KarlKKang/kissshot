@@ -104,8 +104,9 @@ enum LOG_LEVEL: string
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
-const RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/runtime.json';
-const RESTIC_RUNTIME_FILE = '/mnt/user/system/zfs-auto-snapshot/restic_runtime.json';
+const RUNTIME_DIR = '/mnt/user/system/zfs-auto-snapshot';
+const RUNTIME_FILE = 'runtime.json';
+const RESTIC_RUNTIME_FILE = 'restic_runtime.json';
 
 class FileLockException extends Exception {}
 
@@ -115,12 +116,12 @@ abstract class RuntimeStateTemplate
     private mixed $runtime_fp;
     private string $original_state_str;
 
-    public function __construct(string $file_path)
+    public function __construct(string $file_name)
     {
-        $runtime_dir = dirname($file_path);
-        if (!is_dir($runtime_dir) && !mkdir($runtime_dir, 0777, true)) {
+        if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
             throw new Exception('Failed to create runtime directory');
         }
+        $file_path = RUNTIME_DIR . '/' . $file_name;
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');
@@ -530,7 +531,7 @@ function main(array $config): void
 {
     try {
         $runtime = new RuntimeState();
-    } catch (FileLockException $e){
+    } catch (FileLockException $e) {
         logger('Failed to lock runtime file, another instance is running', LOG_LEVEL::WARNING);
         return;
     } catch (Exception $e) {
@@ -554,7 +555,7 @@ function main(array $config): void
 
     try {
         $runtime = new ResticRuntimeState();
-    } catch (FileLockException $e){
+    } catch (FileLockException $e) {
         logger('Failed to lock restic runtime file, another instance is running', LOG_LEVEL::WARNING);
         return;
     } catch (Exception $e) {

@@ -19,7 +19,8 @@ enum LOG_LEVEL: string
     }
 }
 
-const RUNTIME_FILE = '/mnt/user/system/recycle-clean/lock';
+const RUNTIME_DIR = '/mnt/user/system/recycle-clean';
+const RUNTIME_FILE = 'lock';
 const EXPIRATION = 30 * 24 * 60 * 60;
 
 class RuntimeState
@@ -28,11 +29,10 @@ class RuntimeState
 
     public function __construct()
     {
-        $runtime_dir = dirname(RUNTIME_FILE);
-        if (!is_dir($runtime_dir) && !mkdir($runtime_dir, 0777, true)) {
+        if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
             throw new Exception('Failed to create runtime directory');
         }
-        $runtime_fp = fopen(RUNTIME_FILE, 'c+');
+        $runtime_fp = fopen(RUNTIME_DIR . '/' . RUNTIME_FILE, 'c+');
         if ($runtime_fp === false) {
             throw new Exception('Failed to open runtime file');
         }
