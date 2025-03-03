@@ -239,7 +239,10 @@ function get_snapshots(string $dataset): array|false
 {
     $snapshots = [];
     $output = [];
-    system_command('zfs list -t snapshot -H -p -o name,creation ' . escapeshellarg($dataset), $output);
+    if (!system_command('zfs list -t snapshot -H -p -o name,creation ' . escapeshellarg($dataset), $output)) {
+        logger('Cannot get snapshots for dataset ' . $dataset, LOG_LEVEL::ERROR);
+        return false;
+    }
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
         if (count($line) !== 2) {

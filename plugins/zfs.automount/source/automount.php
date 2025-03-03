@@ -66,7 +66,10 @@ function get_encrypted_datasets(): array|false
     $output = [];
     // Not tested: sorting by mountpoint allows mounting of parent datasets before children, so that children
     //  can have their own encryption root.
-    system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint -s mountpoint', $output);
+    if (!system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint -s mountpoint', $output)) {
+        logger('Cannot list ZFS datasets', LOG_LEVEL::ERROR);
+        return false;
+    }
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
         if (count($line) !== 3) {
