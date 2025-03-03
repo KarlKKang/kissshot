@@ -107,6 +107,7 @@ const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
 const RUNTIME_DIR = '/mnt/user/system/zfs-auto-snapshot';
 const RUNTIME_FILE = 'runtime.json';
 const RESTIC_RUNTIME_FILE = 'restic_runtime.json';
+const RESTIC_DIR = '/mnt/user/system/restic';
 
 class FileLockException extends Exception {}
 
@@ -488,7 +489,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
 
-    $cmd_docker_prefix = 'docker run -i --rm --name restic --hostname KISSSHOT -v /mnt/user/appdata/restic:/config:ro -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key -e RESTIC_PASSWORD_FILE=/config/repository.key';
+    $cmd_docker_prefix = 'docker run -i --rm --name restic --hostname KISSSHOT -v /mnt/user/appdata/restic:/config:ro -v ' . RESTIC_DIR . '/cache:/cache -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key -e RESTIC_PASSWORD_FILE=/config/repository.key -e RESTIC_CACHE_DIR=/cache';
     $cmd = $cmd_docker_prefix;
     foreach ($snapshots_to_restic as $dataset => $snapshot_name) {
         $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
@@ -566,6 +567,14 @@ function main(array $config): void
         return;
     } catch (Exception $e) {
         logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+        return;
+    }
+    if (!is_dir(RESTIC_DIR) && !mkdir(RESTIC_DIR, 0777)) {
+        logger('Cannot create restic directory', LOG_LEVEL::ERROR);
+        return;
+    }
+    if (!is_dir(RESTIC_DIR . '/cache') && !mkdir(RESTIC_DIR . '/cache', 0777)) {
+        logger('Cannot create restic cache directory', LOG_LEVEL::ERROR);
         return;
     }
     send_to_restic($snapshots_to_restic, $runtime);
