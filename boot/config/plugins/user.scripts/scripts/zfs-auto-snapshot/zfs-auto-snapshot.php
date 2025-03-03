@@ -221,12 +221,12 @@ function system_command(string $command, array &$output = []): bool
     try {
         $result = exec($command, $output, $retval);
     } catch (ValueError $e) {
-        logger('Cannot execute system command: ' . $command, LOG_LEVEL::ERROR);
+        logger('Cannot execute system command: ' . $command);
         logger($e->getMessage());
         return false;
     }
     if ($retval !== 0 || $result === false) {
-        logger('Command exited with error code ' . $retval . ': ' . $command, LOG_LEVEL::ERROR);
+        logger('Command exited with error code ' . $retval . ': ' . $command);
         foreach ($output as $line) {
             logger($line);
         }
@@ -471,6 +471,7 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
         fs_thaw($domain);
     }
     if (!$create_success) {
+        logger('Error encountered during snapshot creation', LOG_LEVEL::ERROR);
         return;
     }
 
