@@ -1,14 +1,17 @@
 <?xml version='1.0' standalone='yes'?>
 <!DOCTYPE PLUGIN [
-<!ENTITY name      "zfs.automount">
+<!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.03">
-<!ENTITY md5       "b8a16c4883309065a2d265f78292b041">
+<!ENTITY version   "2025.03.07">
+<!ENTITY md5       "7a5ba92cada5ebc29d1f6542db6de83d">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.07
+- Merge into a monolithic plugin.
+
 ###2025.03.03
 - Improved error handling and logging.
 
@@ -61,6 +64,8 @@ Install the plugin bundle.
 # Install the 'bundle'.
 mkdir -p /usr/local/emhttp/plugins/&name; 2>/dev/null
 tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2>/dev/null
+mv /usr/local/emhttp/plugins/&name;/schedule.cron /boot/config/plugins/&name;/schedule.cron 2>/dev/null
+/usr/local/sbin/update_cron
 </INLINE>
 </FILE>
 
@@ -87,6 +92,7 @@ The 'remove' script.
 # Remove all plugin files.
 rm -f -r /usr/local/emhttp/plugins/&name; 2>/dev/null
 rm -f -r /boot/config/plugins/&name; 2>/dev/null
+/usr/local/sbin/update_cron
 
 echo ""
 echo "-----------------------------------------------------------"
