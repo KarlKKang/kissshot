@@ -20,14 +20,14 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 {
     if ($level !== LOG_LEVEL::INFO) {
         try {
-            exec('/usr/local/emhttp/webGui/scripts/notify -e "ZFS Automount" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
+            exec('/usr/local/emhttp/webGui/scripts/notify -e ' . escapeshellarg(NOTIFICATION_TITLE) .  ' -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
         } catch (ValueError $e) {
             echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
         }
     }
     $message = '[' . $level->value . '] ' . $message;
     try {
-        exec('logger -t zfs-automount ' . escapeshellarg($message));
+        exec('logger -t ' . escapeshellarg(SCRIPT_NAME) . ' ' . escapeshellarg($message));
     } catch (ValueError $e) {
         echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }
