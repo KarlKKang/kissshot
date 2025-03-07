@@ -3,6 +3,11 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+const SCRIPT_NAME = 'zfs-auto-snapshot';
+const NOTIFICATION_TITLE = 'ZFS Auto Snapshot';
+
+require __DIR__ . '/helper.php';
+
 $default_retention_policy = [
     'keep_all_within' => 24 * 60 * 60,
     'keep_hourly_within' => 3 * 24 * 60 * 60,
@@ -85,22 +90,6 @@ $config = [
         ],
     ],
 ];
-
-enum LOG_LEVEL: string
-{
-    case INFO = 'notice';
-    case WARNING = 'warning';
-    case ERROR = 'error';
-
-    public function unraid_level(): string
-    {
-        return match ($this) {
-            self::INFO => 'normal',
-            self::WARNING => 'warning',
-            self::ERROR => 'alert',
-        };
-    }
-}
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
@@ -197,43 +186,6 @@ class ResticRuntimeState extends RuntimeStateTemplate
     {
         parent::__construct(RESTIC_RUNTIME_FILE);
     }
-}
-
-function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
-{
-    if ($level !== LOG_LEVEL::INFO) {
-        try {
-            exec('/usr/local/emhttp/webGui/scripts/notify -e "ZFS Auto Snapshot" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
-        } catch (ValueError $e) {
-            echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
-        }
-    }
-    $message = '[' . $level->value . '] ' . $message;
-    try {
-        exec('logger -t zfs-auto-snapshot ' . escapeshellarg($message));
-    } catch (ValueError $e) {
-        echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
-    }
-}
-
-function system_command(string $command, array &$output = []): bool
-{
-    $command .= ' 2>&1';
-    try {
-        $result = exec($command, $output, $retval);
-    } catch (ValueError $e) {
-        logger('Cannot execute system command: ' . $command);
-        logger($e->getMessage());
-        return false;
-    }
-    if ($retval !== 0 || $result === false) {
-        logger('Command exited with error code ' . $retval . ': ' . $command);
-        foreach ($output as $line) {
-            logger($line);
-        }
-        return false;
-    }
-    return true;
 }
 
 function get_snapshots(string $dataset): array|false
