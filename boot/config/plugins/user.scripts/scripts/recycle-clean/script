@@ -1,7 +1,0 @@
-#!/bin/bash
-#description=This script will find and delete files and empty directories older than 30 days in the .recycle subdirectory in each share
-#arrayStarted=true
-
-# Run on schedule: 0 1 * * *
-
-nohup php /boot/config/plugins/user.scripts/scripts/recycle-clean/recycle-clean.php &

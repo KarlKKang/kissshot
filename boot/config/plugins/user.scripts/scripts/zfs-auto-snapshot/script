@@ -1,7 +1,0 @@
-#!/bin/bash
-#description=This script will take and manage the snapshots of ZFS datasets
-#arrayStarted=true
-
-# Run on schedule: 0 * * * *
-
-nohup php /boot/config/plugins/user.scripts/scripts/zfs-auto-snapshot/zfs-auto-snapshot.php &
