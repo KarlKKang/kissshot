@@ -1,0 +1,2 @@
+0 1 * * * /usr/local/emhttp/plugins/kissshot-plugin/recycle-clean.sh >> /usr/local/emhttp/plugins/kissshot-plugin/recycle-clean.log 2>&1
+0 * * * * /usr/local/emhttp/plugins/kissshot-plugin/zfs-auto-snapshot.sh >> /usr/local/emhttp/plugins/kissshot-plugin/zfs-auto-snapshot.log 2>&1
