@@ -3,57 +3,20 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-enum LOG_LEVEL: string
-{
-    case INFO = 'notice';
-    case WARNING = 'warning';
-    case ERROR = 'error';
+const SCRIPT_NAME = 'recycle-clean';
+const NOTIFICATION_TITLE = 'Recycle Clean';
 
-    public function unraid_level(): string
-    {
-        return match ($this) {
-            self::INFO => 'normal',
-            self::WARNING => 'warning',
-            self::ERROR => 'alert',
-        };
-    }
-}
+require __DIR__ . '/helper.php';
 
 const RUNTIME_DIR = '/mnt/user/system/recycle-clean';
 const RUNTIME_FILE = 'lock';
 const EXPIRATION = 30 * 24 * 60 * 60;
 
-class RuntimeState
+class RuntimeState extends RuntimeStateTemplate
 {
-    private mixed $runtime_fp;
-
     public function __construct()
     {
-        if (!is_dir(RUNTIME_DIR) && !mkdir(RUNTIME_DIR, 0777)) {
-            throw new Exception('Cannot create runtime directory');
-        }
-        $file_path = RUNTIME_DIR . '/' . RUNTIME_FILE;
-        if (!file_exists($file_path)) {
-            logger('Runtime file not found, creating new one: ' . $file_path, LOG_LEVEL::WARNING);
-        }
-        $runtime_fp = fopen($file_path, 'c+');
-        if ($runtime_fp === false) {
-            throw new Exception('Cannot open runtime file');
-        }
-        if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
-            throw new Exception('Cannot lock runtime file, other instance is running');
-        }
-        $this->runtime_fp = $runtime_fp;
-    }
-
-    public function commit(): void
-    {
-        if (!flock($this->runtime_fp, LOCK_UN)) {
-            throw new Exception('Cannot unlock runtime file');
-        }
-        if (!fclose($this->runtime_fp)) {
-            throw new Exception('Cannot close runtime file');
-        }
+        parent::__construct(RUNTIME_DIR, RUNTIME_FILE);
     }
 }
 
@@ -97,23 +60,6 @@ class FileSystem
             return false;
         }
         return $stat;
-    }
-}
-
-function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
-{
-    if ($level !== LOG_LEVEL::INFO) {
-        try {
-            exec('/usr/local/emhttp/webGui/scripts/notify -e "Recycle Clean" -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
-        } catch (ValueError $e) {
-            echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
-        }
-    }
-    $message = '[' . $level->value . '] ' . $message;
-    try {
-        exec('logger -t recycle-clean ' . escapeshellarg($message));
-    } catch (ValueError $e) {
-        echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }
 }
 
