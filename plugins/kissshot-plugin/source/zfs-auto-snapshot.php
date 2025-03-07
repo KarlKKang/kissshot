@@ -414,6 +414,10 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
 
 function main(array $config): void
 {
+    if (!unraid_array_started(get_unraid_vars())) {
+        return;
+    }
+
     try {
         $runtime = new RuntimeState();
     } catch (FileLockException $e) {

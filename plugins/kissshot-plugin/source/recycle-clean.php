@@ -121,6 +121,9 @@ function clean_directory(string $dir): bool
 
 function main(): void
 {
+    if (!unraid_array_started(get_unraid_vars())) {
+        return;
+    }
     try {
         $runtime = new RuntimeState();
     } catch (FileLockException $e) {
