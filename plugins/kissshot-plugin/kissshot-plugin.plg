@@ -49,10 +49,10 @@ The 'pre-install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 # Remove emhttp files so we can re-install.
-rm -f -r /usr/local/emhttp/plugins/&name;/* 2>/dev/null
+rm -f -r /usr/local/emhttp/plugins/&name;/* 2&gt;&amp;1
 
 # Remove old 'bundle' files.
-rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2>/dev/null | grep -v '&version;')
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2&gt;&amp;1 | grep -v '&version;')
 </INLINE>
 </FILE>
 
@@ -62,9 +62,9 @@ Install the plugin bundle.
 <FILE Run="/bin/bash">
 <INLINE>
 # Install the 'bundle'.
-mkdir -p /usr/local/emhttp/plugins/&name; 2>/dev/null
-tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2>/dev/null
-mv /usr/local/emhttp/plugins/&name;/schedule.cron /boot/config/plugins/&name;/schedule.cron 2>/dev/null
+mkdir -p /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
+tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
+mv /usr/local/emhttp/plugins/&name;/schedule.cron /boot/config/plugins/&name;/schedule.cron 2&gt;&amp;1
 /usr/local/sbin/update_cron
 </INLINE>
 </FILE>
@@ -90,8 +90,8 @@ The 'remove' script.
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
 # Remove all plugin files.
-rm -f -r /usr/local/emhttp/plugins/&name; 2>/dev/null
-rm -f -r /boot/config/plugins/&name; 2>/dev/null
+rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
+rm -f -r /boot/config/plugins/&name; 2&gt;&amp;1
 /usr/local/sbin/update_cron
 
 echo ""
