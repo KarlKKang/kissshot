@@ -101,9 +101,13 @@ abstract class RuntimeStateTemplate
 
     public function commit(): void
     {
-        $state_str = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        if ($state_str === false) {
-            throw new Exception('Cannot encode runtime state');
+        if (count($this->state) === 0) {
+            $state_str = '';
+        } else {
+            $state_str = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($state_str === false) {
+                throw new Exception('Cannot encode runtime state');
+            }
         }
 
         if ($state_str !== $this->original_state_str) {
@@ -113,7 +117,8 @@ abstract class RuntimeStateTemplate
             if (!rewind($this->runtime_fp)) {
                 throw new Exception('Cannot rewind runtime file');
             }
-            if (fwrite($this->runtime_fp, $state_str) !== strlen($state_str)) {
+            $state_str_len = strlen($state_str);
+            if ($state_str_len > 0 && fwrite($this->runtime_fp, $state_str) !== $state_str_len) {
                 throw new Exception('Cannot write runtime state');
             }
         }
