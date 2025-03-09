@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.07">
-<!ENTITY md5       "7a5ba92cada5ebc29d1f6542db6de83d">
+<!ENTITY version   "2025.03.09">
+<!ENTITY md5       "6c9ea60f237eea275a73eeb81db7ad68">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.09
+- Reduce ZFS snapshot retention period.
+
 ###2025.03.07
 - Merge into a monolithic plugin.
 

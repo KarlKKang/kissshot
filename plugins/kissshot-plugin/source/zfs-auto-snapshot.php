@@ -12,13 +12,10 @@ $default_retention_policy = [
     'keep_all_within' => 24 * 60 * 60,
     'keep_hourly_within' => 3 * 24 * 60 * 60,
     'keep_daily_within' => 30 * 24 * 60 * 60,
-    'keep_weekly_within' => 365 * 24 * 60 * 60 / 4,
-    'keep_monthly_within' => 365 * 24 * 60 * 60,
 ];
 $short_retention_policy = [
     'keep_all_within' => 24 * 60 * 60,
     'keep_daily_within' => 7 * 24 * 60 * 60,
-    'keep_weekly_within' => 30 * 24 * 60 * 60,
 ];
 
 $config = [
