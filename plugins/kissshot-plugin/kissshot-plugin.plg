@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.03.09">
-<!ENTITY md5       "6c9ea60f237eea275a73eeb81db7ad68">
+<!ENTITY md5       "d4e4542002c29c014819c54fa01b05ef">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,7 @@
 <CHANGES>
 ###2025.03.09
 - Reduce ZFS snapshot retention period.
+- Fix cron job not registered on install.
 
 ###2025.03.07
 - Merge into a monolithic plugin.
@@ -67,8 +68,8 @@ Install the plugin bundle.
 # Install the 'bundle'.
 mkdir -p /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
 tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
-mv /usr/local/emhttp/plugins/&name;/schedule.cron /boot/config/plugins/&name;/schedule.cron 2&gt;&amp;1
-/usr/local/sbin/update_cron
+mv /usr/local/emhttp/plugins/&name;/cron/&name;.daily.sh /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
+mv /usr/local/emhttp/plugins/&name;/cron/&name;.hourly.sh /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
 </INLINE>
 </FILE>
 
@@ -93,9 +94,10 @@ The 'remove' script.
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
 # Remove all plugin files.
+rm -f /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
+rm -f /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
 rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
 rm -f -r /boot/config/plugins/&name; 2&gt;&amp;1
-/usr/local/sbin/update_cron
 
 echo ""
 echo "-----------------------------------------------------------"

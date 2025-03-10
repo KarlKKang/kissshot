@@ -1,7 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(dirname "$0")
-php "$SCRIPT_DIR/zfs-auto-snapshot.php"
+php "/usr/local/emhttp/plugins/kissshot-plugin/zfs-auto-snapshot.php"
 exit_code=$?
 if [ $exit_code -ne 0 ]; then
     logger -t zfs-auto-snapshot "[error] Script exited with error code $exit_code"
