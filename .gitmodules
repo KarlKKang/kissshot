@@ -1,0 +1,3 @@
+[submodule "mnt/user/system/rsync-server-source"]
+	path = mnt/user/system/rsync-server-source
+	url = https://github.com/KarlKKang/rsync-server.git
