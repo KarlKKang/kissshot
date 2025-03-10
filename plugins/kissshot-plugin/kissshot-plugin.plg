@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.09">
-<!ENTITY md5       "d4e4542002c29c014819c54fa01b05ef">
+<!ENTITY version   "2025.03.10">
+<!ENTITY md5       "304991151815f6a980f69b1a08c090c4">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.10
+- Send `appdata` share to restic.
+
 ###2025.03.09
 - Reduce ZFS snapshot retention period.
 - Fix cron job not registered on install.

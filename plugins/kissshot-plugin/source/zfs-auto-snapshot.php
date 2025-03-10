@@ -40,6 +40,7 @@ $config = [
         'datasets' => [
             'kokorowatari/appdata' => [
                 'retention_policy' => $default_retention_policy,
+                'send_to_restic' => true,
             ],
         ],
     ],
