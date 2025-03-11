@@ -97,8 +97,9 @@ services:
       -c logging_collector=on
       -c max_wal_size=2GB
       -c shared_buffers=512MB
-      -c wal_compression=on
       -c full_page_writes=off
+      -c wal_init_zero=off
+      -c wal_recycle=off
     restart: always
     deploy:
       resources:
