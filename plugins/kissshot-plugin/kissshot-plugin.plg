@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.10">
-<!ENTITY md5       "304991151815f6a980f69b1a08c090c4">
+<!ENTITY version   "2025.03.11">
+<!ENTITY md5       "e372a9b2977fc6120bb01eda45425fe0">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.11
+- Use a named Docker volume for restic cache.
+
 ###2025.03.10
 - Send `appdata` share to restic.
 
