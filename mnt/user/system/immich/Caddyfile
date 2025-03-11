@@ -1,8 +1,6 @@
-import /caddy_vars 
-
-{vars.DOMAIN} {
-	tls {vars.EMAIL} {
-		dns cloudflare {vars.CF_API_TOKEN}
+{$DOMAIN} {
+	tls {$EMAIL} {
+		dns cloudflare {$CF_API_TOKEN}
 	}
 	encode zstd gzip
 	reverse_proxy immich-server:2283

@@ -98,7 +98,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-      - ${CADDY_VARS_FILE}:/caddy_vars:ro
+    env_file:
+      - ${CADDY_ENV_FILE}
 
 volumes:
   model-cache:
