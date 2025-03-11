@@ -23,8 +23,6 @@ services:
       - ${DB_PASSWORD_FILE_HOST}:${DB_PASSWORD_FILE}:ro
     env_file:
       - .env
-    ports:
-      - '2283:2283'
     depends_on:
       - redis
       - database
@@ -88,5 +86,22 @@ services:
       -c full_page_writes=off
     restart: always
 
+  caddy:
+    image: caddy:2.9.1
+    container_name: immich_caddy
+    restart: always
+    ports:
+      - 2283:2283
+      - 2283:2283/udp
+    volumes:
+      - ./caddy:/usr/bin/caddy
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    env_file:
+      - ${CADDY_ENV_FILE}
+
 volumes:
   model-cache:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,7 @@
+{$DOMAIN} {
+	tls {$EMAIL} {
+		dns cloudflare {$CF_API_TOKEN}
+	}
+	encode zstd gzip
+	reverse_proxy immich-server:2283
+}
