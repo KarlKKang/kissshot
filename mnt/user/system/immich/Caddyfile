@@ -1,4 +1,4 @@
-{$DOMAIN} {
+{$DOMAIN}:2283 {
 	tls {$EMAIL} {
 		dns cloudflare {$CF_API_TOKEN}
 	}
