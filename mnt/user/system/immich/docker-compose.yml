@@ -65,7 +65,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1g
+          memory: 128m
     memswap_limit: -1
 
   database:
