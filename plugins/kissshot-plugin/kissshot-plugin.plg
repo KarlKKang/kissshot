@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.03.12">
-<!ENTITY md5       "da1d9a057d913ff4324abddd1b7d04b2">
+<!ENTITY md5       "e384f6fffc9fb92240acb0637cf774d2">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,7 @@
 <CHANGES>
 ###2025.03.12
 - Limit restic memory to 1GB.
+- Backup the photo library.
 
 ###2025.03.11
 - Use a named Docker volume for restic cache.
