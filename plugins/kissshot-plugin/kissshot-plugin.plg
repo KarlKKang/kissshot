@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.11">
-<!ENTITY md5       "e372a9b2977fc6120bb01eda45425fe0">
+<!ENTITY version   "2025.03.12">
+<!ENTITY md5       "da1d9a057d913ff4324abddd1b7d04b2">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.12
+- Limit restic memory to 1GB.
+
 ###2025.03.11
 - Use a named Docker volume for restic cache.
 
