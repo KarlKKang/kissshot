@@ -21,6 +21,7 @@ services:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
       - ${DB_PASSWORD_FILE_HOST}:${DB_PASSWORD_FILE}:ro
+      - ${EXTERNAL_LIBRARY_LOCATION}:/external_library:ro
     env_file:
       - .env
     depends_on:
