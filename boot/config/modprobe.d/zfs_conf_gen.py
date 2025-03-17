@@ -4,6 +4,7 @@ total_ram = 135045971968 # run `cat /proc/meminfo | grep MemTotal`, * 1024
 total_reserved_ram = 24576 * 2 * 1024 * 1024
 available_cpus = 28
 total_cpus = 64
+l2arc_tbw = 2400
 
 total_available_ram = total_ram - total_reserved_ram
 percent_available_ram = total_available_ram / total_ram
@@ -63,6 +64,12 @@ with open(zfs_conf_path, 'w') as f:
     # default: 80
     f.write(f'options zfs zio_taskq_batch_pct={round(80 * percent_available_cpus)}\n')
 
-
-    # other options
+    # default: 0
     f.write('options zfs l2arc_exclude_special=1\n')
+
+    # default: 8388608
+    #  customized so that the expected lifetime of the L2ARC is 5 years, rounded to the nearest multiple of 4 MiB
+    l2arc_write_max = round(l2arc_tbw * 1000 * 1000 / 5 / 365 / 24 / 60 / 60 / 4) * 4 * 1024 * 1024
+    if l2arc_write_max > 8388608:
+        f.write(f'options zfs l2arc_write_max={l2arc_write_max}\n')
+        f.write(f'options zfs l2arc_write_boost={l2arc_write_max}\n')
