@@ -3,7 +3,6 @@ import math
 
 available_cpus = 28
 total_cpus = 64
-l2arc_tbw = 2400
 
 percent_available_cpus = available_cpus / total_cpus
 
@@ -30,10 +29,3 @@ with open(zfs_conf_path, 'w') as f:
 
     # default: 0
     f.write('options zfs l2arc_exclude_special=1\n')
-
-    # default: 33554432
-    #  customized so that the expected lifetime of the L2ARC is 5 years, rounded to the nearest multiple of 4 MiB
-    l2arc_write_max = round(l2arc_tbw * 1000 * 1000 / 5 / 365 / 24 / 60 / 60 / 4) * 4 * 1024 * 1024
-    if l2arc_write_max > 33554432:
-        f.write(f'options zfs l2arc_write_max={l2arc_write_max}\n')
-        f.write(f'options zfs l2arc_write_boost={l2arc_write_max}\n')
