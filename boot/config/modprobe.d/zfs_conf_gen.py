@@ -1,7 +1,5 @@
 import os
 
-total_ram = 135045971968 # run `cat /proc/meminfo | grep MemTotal`, * 1024
-total_reserved_ram = 24576 * 2 * 1024 * 1024
 available_cpus = 28
 total_cpus = 64
 l2arc_tbw = 2400
