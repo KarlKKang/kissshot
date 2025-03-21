@@ -12,6 +12,10 @@ with open(zfs_conf_path, 'w') as f:
     # The defaults are accurate as of ZFS 2.3.1
     # https://openzfs.github.io/openzfs-docs/man/v2.3/4/zfs.4.html
 
+    # ZFS calculates the CPU percentage based on the number of online CPUs:
+    #  /sys/devices/system/cpu/online
+    # This does not account for isolcpus.
+
     # default: 50
     f.write(f'options zfs metaslab_preload_pct={math.ceil(50 * percent_available_cpus)}\n')
 
