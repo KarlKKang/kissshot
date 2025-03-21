@@ -18,14 +18,6 @@ with open(zfs_conf_path, 'w') as f:
     if available_cpus > 4:
         f.write(f'options zfs zfs_multilist_num_sublists={available_cpus}\n')
 
-    # default: 75
-    f.write(f'options zfs zfs_sync_taskq_batch_pct={round(75 * percent_available_cpus)}\n')
-
-    # default: max(16 * number of CPUs, 64)
-    zfs_zevent_len_max = 16 * available_cpus
-    if zfs_zevent_len_max > 64:
-        f.write(f'options zfs zfs_zevent_len_max={zfs_zevent_len_max}\n')
-
     # default: 100
     f.write(f'options zfs zfs_zil_clean_taskq_nthr_pct={round(100 * percent_available_cpus)}\n')
 
