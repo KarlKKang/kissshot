@@ -1,4 +1,5 @@
 import os
+import math
 
 available_cpus = 28
 total_cpus = 64
@@ -13,16 +14,16 @@ with open(zfs_conf_path, 'w') as f:
     # https://openzfs.github.io/openzfs-docs/man/v2.3/4/zfs.4.html
 
     # default: 50
-    f.write(f'options zfs metaslab_preload_pct={round(50 * percent_available_cpus)}\n')
+    f.write(f'options zfs metaslab_preload_pct={math.ceil(50 * percent_available_cpus)}\n')
 
     # default: max(number of online CPUs, 4)
     f.write(f'options zfs zfs_multilist_num_sublists={max(available_cpus, 4)}\n')
 
     # default: 100
-    f.write(f'options zfs zfs_zil_clean_taskq_nthr_pct={round(100 * percent_available_cpus)}\n')
+    f.write(f'options zfs zfs_zil_clean_taskq_nthr_pct={math.ceil(100 * percent_available_cpus)}\n')
 
     # default: 80
-    f.write(f'options zfs zio_taskq_batch_pct={round(80 * percent_available_cpus)}\n')
+    f.write(f'options zfs zio_taskq_batch_pct={math.ceil(80 * percent_available_cpus)}\n')
 
     # default: max(number of online CPUs, 32)
     f.write(f'options zfs zvol_threads={max(available_cpus, 32)}\n')
