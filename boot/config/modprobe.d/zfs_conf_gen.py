@@ -1,7 +1,7 @@
 import os
 import math
 
-total_ram = 131880808 * 1024 # `cat /proc/meminfo | grep MemTotal` * 1024
+total_ram = 131880808 * 1024 # `cat /proc/spl/kstat/zfs/arcstats | grep memory_all_bytes`
 total_reserved_ram = 24576 * 2 * 1024 * 1024
 available_cpus = 28
 total_cpus = 64
