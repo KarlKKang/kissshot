@@ -1,12 +1,9 @@
 import os
 import math
 
-total_ram = 131880808 * 1024 # `cat /proc/spl/kstat/zfs/arcstats | grep memory_all_bytes`
-total_reserved_ram = 24576 * 2 * 1024 * 1024
 available_cpus = 28
 total_cpus = 64
 
-total_available_ram = total_ram - total_reserved_ram
 percent_available_cpus = available_cpus / total_cpus
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -14,10 +11,6 @@ zfs_conf_path = os.path.join(script_dir, 'zfs.conf')
 with open(zfs_conf_path, 'w') as f:
     # The defaults are accurate as of ZFS 2.3.1
     # https://openzfs.github.io/openzfs-docs/man/v2.3/4/zfs.4.html
-
-    # default: max(5/8 of total RAM, total RAM - 1 GiB, 67108864 B)
-    arc_max = max(total_available_ram * 5 / 8, total_available_ram - 1024 * 1024 * 1024, 67108864)
-    f.write(f'options zfs zfs_arc_max={arc_max}\n')
 
     # ZFS calculates the CPU percentage based on the number of online CPUs:
     #  /sys/devices/system/cpu/online

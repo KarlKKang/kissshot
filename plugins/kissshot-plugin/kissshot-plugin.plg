@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.12">
-<!ENTITY md5       "e384f6fffc9fb92240acb0637cf774d2">
+<!ENTITY version   "2025.03.23">
+<!ENTITY md5       "24f987f917a0ace53f19700bfb9c0ba6">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.23
+- Set `zfs_arc_max` when disks are mounted.
+
 ###2025.03.12
 - Limit restic memory to 1GB.
 - Backup the photo library.
