@@ -114,7 +114,11 @@ function clean_directory(string $dir): bool
         return $dir_expired && FileSystem::rmdir($dir);
     }
     if ($remaining_count === 0) {
-        return FileSystem::rmdir($dir);
+        $files_rescan = FileSystem::scandir($dir);
+        if ($files_rescan === false) {
+            return false;
+        }
+        return count($files_rescan) === 0 && FileSystem::rmdir($dir);
     }
     return false;
 }
