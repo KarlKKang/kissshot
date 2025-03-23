@@ -101,6 +101,7 @@ services:
       -c full_page_writes=off
       -c wal_init_zero=off
       -c wal_recycle=off
+      -c huge_pages=off
     restart: always
     deploy:
       resources:
