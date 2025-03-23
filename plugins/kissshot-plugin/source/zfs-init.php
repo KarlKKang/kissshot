@@ -78,8 +78,12 @@ function main(): void
 
     # default: max(5/8 of total RAM, total RAM - 1 GiB, 67108864 B)
     # We will simply offset the default value by reserved bytes, instead of re-calculating it from the new available memory.
-    $arc_max = max($memory_all_bytes * 5 / 8, $memory_all_bytes - 1024 * 1024 * 1024);
-    $arc_max = max($arc_max - ARC_RESERVE_BYTES, $arc_min, 67108864);
+    $arc_max = intval(max($memory_all_bytes * 5 / 8, $memory_all_bytes - 1024 * 1024 * 1024));
+    $arc_max -= ARC_RESERVE_BYTES;
+    if ($arc_max < $arc_min || $arc_max < 67108864) {
+        logger('arc_max too low: ' . $arc_max, LOG_LEVEL::ERROR);
+        return;
+    }
     set_arc_max($arc_max);
 }
 
