@@ -2,13 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.23">
-<!ENTITY md5       "8986ddb24587998eaf10c84ffb7d98e8">
+<!ENTITY version   "2025.03.30">
+<!ENTITY md5       "16d153fd51b5581fd2d280b920dad817">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.03.30
+- Enable trimming on every script run.
+- Early exit if trimming fails.
+
 ###2025.03.23
 - Set `zfs_arc_max` when disks are mounted.
 - Rescan directory before removing when cleaning the recycle bin.

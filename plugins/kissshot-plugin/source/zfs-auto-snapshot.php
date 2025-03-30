@@ -22,7 +22,7 @@ $config = [
     [
         'domain' => [
             'name' => 'TSUKIHI',
-            'trim_schedule' => 'daily',
+            'trim_schedule' => 'all',
         ],
         'datasets' => [
             'kokorowatari/domains/TSUKIHI/vdisk_c' => [
@@ -322,7 +322,11 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
         $domain_is_running = $domain_state === 'running';
         if ($domain_is_running) {
             $trim_schedule = $txg['domain']['trim_schedule'] ?? null;
-            if ($trim_schedule !== null) {
+            if ($trim_schedule === 'all') {
+                if (!fs_trim($domain)) {
+                    return;
+                }
+            } elseif ($trim_schedule !== null) {
                 if (!is_string($trim_schedule)) {
                     logger('Invalid trim schedule for domain ' . $domain . ': ' . json_encode($txg), LOG_LEVEL::ERROR);
                     return;
@@ -340,7 +344,9 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
                 $last_trimmed = $runtime->state['domains'][$domain]['last_trimmed'] ?? null;
                 $current_trim_date = date($trim_date_pattern);
                 if ($last_trimmed !== $current_trim_date) {
-                    fs_trim($domain);
+                    if (!fs_trim($domain)) {
+                        return;
+                    }
                     $runtime->state['domains'][$domain]['last_trimmed'] = $current_trim_date;
                 }
             }
