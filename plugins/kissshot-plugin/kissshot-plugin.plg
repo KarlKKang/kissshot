@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.03.30">
-<!ENTITY md5       "16d153fd51b5581fd2d280b920dad817">
+<!ENTITY version   "2025.04.06">
+<!ENTITY md5       "5b918a279f22787adecb5cd78fb4cfca">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.04.06
+- Use a custom TRIM script to avoid double TRIM on the docker volume.
+
 ###2025.03.30
 - Enable trimming on every script run.
 - Early exit if trimming fails.

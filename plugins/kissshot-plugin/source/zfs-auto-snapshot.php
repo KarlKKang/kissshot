@@ -22,7 +22,7 @@ $config = [
     [
         'domain' => [
             'name' => 'TSUKIHI',
-            'trim_schedule' => 'all',
+            'trim_schedule' => 'daily',
         ],
         'datasets' => [
             'kokorowatari/domains/TSUKIHI/vdisk_c' => [
