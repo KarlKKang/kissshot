@@ -118,7 +118,8 @@ The 'remove' script.
 rm -f /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
 rm -f /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
 rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
-rm -f -r /boot/config/plugins/&name; 2&gt;&amp;1
+rm -f /boot/config/plugins/&name;/&name;-&version;.txz 2&gt;&amp;1
+rmdir --ignore-fail-on-non-empty /boot/config/plugins/&name; 2&gt;&amp;1
 
 echo ""
 echo "-----------------------------------------------------------"
