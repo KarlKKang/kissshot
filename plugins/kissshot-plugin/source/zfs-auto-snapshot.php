@@ -450,10 +450,7 @@ function main(array $config): void
         }
         snapshot_txg($txg, $runtime, $snapshots_to_restic);
     }
-    try {
-        $runtime->commit();
-    } catch (Exception $e) {
-        logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+    if (!$runtime->commit()) {
         return;
     }
 
@@ -467,12 +464,7 @@ function main(array $config): void
         return;
     }
     send_to_restic($snapshots_to_restic, $runtime);
-    try {
-        $runtime->commit();
-    } catch (Exception $e) {
-        logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
-        return;
-    }
+    $runtime->commit();
 }
 
 main($config);

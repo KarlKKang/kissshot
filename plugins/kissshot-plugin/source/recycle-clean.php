@@ -151,12 +151,7 @@ function main(): void
         }
         clean_directory($recycle_dir);
     }
-    try {
-        $runtime->commit();
-    } catch (Exception $e) {
-        logger($e->getMessage(), LOG_LEVEL::ERROR);
-        return;
-    }
+    $runtime->commit();
 }
 
 main();

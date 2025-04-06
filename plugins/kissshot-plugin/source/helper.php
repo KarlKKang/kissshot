@@ -99,36 +99,48 @@ abstract class RuntimeStateTemplate
         }
     }
 
-    public function commit(): void
+    public function commit(): bool
     {
         if (count($this->state) === 0) {
             $state_str = '';
         } else {
             $state_str = json_encode($this->state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             if ($state_str === false) {
-                throw new Exception('Cannot encode runtime state');
+                self::log('Cannot encode runtime state', LOG_LEVEL::ERROR);
+                return false;
             }
         }
 
         if ($state_str !== $this->original_state_str) {
             if (!ftruncate($this->runtime_fp, 0)) {
-                throw new Exception('Cannot truncate runtime file');
+                self::log('Cannot truncate runtime file', LOG_LEVEL::ERROR);
+                return false;
             }
             if (!rewind($this->runtime_fp)) {
-                throw new Exception('Cannot rewind runtime file');
+                self::log('Cannot rewind runtime file', LOG_LEVEL::ERROR);
+                return false;
             }
             $state_str_len = strlen($state_str);
             if ($state_str_len > 0 && fwrite($this->runtime_fp, $state_str) !== $state_str_len) {
-                throw new Exception('Cannot write runtime state');
+                self::log('Cannot write runtime state', LOG_LEVEL::ERROR);
+                return false;
             }
         }
 
         if (!flock($this->runtime_fp, LOCK_UN)) {
-            throw new Exception('Cannot unlock runtime file');
+            self::log('Cannot unlock runtime file', LOG_LEVEL::ERROR);
+            return false;
         }
         if (!fclose($this->runtime_fp)) {
-            throw new Exception('Cannot close runtime file');
+            self::log('Cannot close runtime file', LOG_LEVEL::ERROR);
+            return false;
         }
+        return true;
+    }
+
+    private static function log(string $message, LOG_LEVEL $level): void 
+    {
+        logger(static::class . ': ' . $message, $level);
     }
 }
 
