@@ -125,7 +125,7 @@ function clean_directory(string $dir): bool
 
 function main(): void
 {
-    if (!unraid_array_started(get_unraid_vars())) {
+    if (!UnraidStatus::array_started()) {
         return;
     }
     try {

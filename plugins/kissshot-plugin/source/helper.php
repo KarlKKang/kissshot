@@ -132,17 +132,23 @@ abstract class RuntimeStateTemplate
     }
 }
 
-function get_unraid_vars(): array|false
+class UnraidStatus
 {
-    $unraid_vars = parse_ini_file('/var/local/emhttp/var.ini');
-    if ($unraid_vars === false) {
-        logger('Cannot read Unraid variables', LOG_LEVEL::ERROR);
-        return false;
-    }
-    return $unraid_vars;
-}
+    private static array|null|false $unraid_vars = null;
 
-function unraid_array_started(array|false $unraid_vars): bool
-{
-    return ($unraid_vars['mdState'] ?? null) === 'STARTED';
+    private static function get_unraid_vars(): array|false
+    {
+        if (self::$unraid_vars === null) {
+            self::$unraid_vars = parse_ini_file('/var/local/emhttp/var.ini');
+            if (self::$unraid_vars === false) {
+                logger('Cannot read Unraid variables', LOG_LEVEL::ERROR);
+            }
+        }
+        return self::$unraid_vars;
+    }
+
+    public static function array_started(): bool
+    {
+        return (self::get_unraid_vars()['mdState'] ?? null) === 'STARTED';
+    }
 }
