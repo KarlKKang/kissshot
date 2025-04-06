@@ -53,7 +53,7 @@ function system_command(string $command, array &$output = []): bool
     return true;
 }
 
-class FileLockException extends Exception {}
+class RuntimeStateException extends Exception {}
 
 abstract class RuntimeStateTemplate
 {
@@ -64,18 +64,21 @@ abstract class RuntimeStateTemplate
     public function __construct(string $dir, string $file_name)
     {
         if (!is_dir($dir) && !mkdir($dir, 0777)) {
-            throw new Exception('Cannot create runtime directory');
+            self::log('Cannot create runtime directory', LOG_LEVEL::ERROR);
+            throw new RuntimeStateException();
         }
         $file_path = $dir . '/' . $file_name;
         if (!file_exists($file_path)) {
-            logger('Runtime file not found, creating new one: ' . $file_path, LOG_LEVEL::WARNING);
+            self::log('Runtime file not found, creating new one: ' . $file_path, LOG_LEVEL::WARNING);
         }
         $runtime_fp = fopen($file_path, 'c+');
         if ($runtime_fp === false) {
-            throw new Exception('Cannot open runtime file');
+            self::log('Cannot open runtime file', LOG_LEVEL::ERROR);
+            throw new RuntimeStateException();
         }
         if (flock($runtime_fp, LOCK_EX | LOCK_NB) === false) {
-            throw new FileLockException();
+            self::log('Cannot lock runtime file, another instance is running', LOG_LEVEL::WARNING);
+            throw new RuntimeStateException();
         }
         $this->runtime_fp = $runtime_fp;
 
@@ -84,16 +87,19 @@ abstract class RuntimeStateTemplate
             $this->state = [];
             $this->original_state_str = '';
         } else if ($file_size === false) {
-            throw new Exception('Cannot get runtime file size');
+            self::log('Cannot get runtime file size', LOG_LEVEL::ERROR);
+            throw new RuntimeStateException();
         } else {
             $file_contents = fread($runtime_fp, $file_size);
             if ($file_contents === false) {
-                throw new Exception('Cannot read runtime file contents');
+                self::log('Cannot read runtime file contents', LOG_LEVEL::ERROR);
+                throw new RuntimeStateException();
             }
             $this->original_state_str = $file_contents;
             $state = json_decode($file_contents, true);
             if (!is_array($state)) {
-                throw new Exception('Cannot decode runtime file contents');
+                self::log('Cannot decode runtime file contents', LOG_LEVEL::ERROR);
+                throw new RuntimeStateException();
             }
             $this->state = $state;
         }

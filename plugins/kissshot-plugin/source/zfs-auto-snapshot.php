@@ -435,11 +435,7 @@ function main(array $config): void
 
     try {
         $runtime = new RuntimeState();
-    } catch (FileLockException $e) {
-        logger('Cannot lock runtime file, another instance is running', LOG_LEVEL::WARNING);
-        return;
-    } catch (Exception $e) {
-        logger('Runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+    } catch (RuntimeStateException) {
         return;
     }
     $snapshots_to_restic = [];
@@ -456,11 +452,7 @@ function main(array $config): void
 
     try {
         $runtime = new ResticRuntimeState();
-    } catch (FileLockException $e) {
-        logger('Cannot lock restic runtime file, another instance is running', LOG_LEVEL::WARNING);
-        return;
-    } catch (Exception $e) {
-        logger('Restic runtime file error: ' . $e->getMessage(), LOG_LEVEL::ERROR);
+    } catch (RuntimeStateException) {
         return;
     }
     send_to_restic($snapshots_to_restic, $runtime);

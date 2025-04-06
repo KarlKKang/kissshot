@@ -130,11 +130,7 @@ function main(): void
     }
     try {
         $runtime = new RuntimeState();
-    } catch (FileLockException $e) {
-        logger('Cannot lock runtime file, another instance is running', LOG_LEVEL::WARNING);
-        return;
-    } catch (Exception $e) {
-        logger($e->getMessage(), LOG_LEVEL::ERROR);
+    } catch (RuntimeStateException) {
         return;
     }
     $files = FileSystem::scandir('/mnt/user');
