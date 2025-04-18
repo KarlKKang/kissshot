@@ -191,58 +191,28 @@ kstat = None
 pretty_print = True
 
 
-if sys.platform.startswith('freebsd'):
-    # Requires py-sysctl on FreeBSD
-    import sysctl
+def kstat_update():
+    global kstat
 
-    def kstat_update():
-        global kstat
+    k1 = [line.strip() for line in open('/host/proc/spl/kstat/zfs/arcstats')]
 
-        k = [ctl for ctl in sysctl.filter('kstat.zfs.misc.arcstats')
-             if ctl.type != sysctl.CTLTYPE_NODE]
-        k += [ctl for ctl in sysctl.filter('kstat.zfs.misc.zfetchstats')
-             if ctl.type != sysctl.CTLTYPE_NODE]
+    k2 = ["zfetch_" + line.strip() for line in
+            open('/host/proc/spl/kstat/zfs/zfetchstats')]
 
-        if not k:
-            sys.exit(1)
+    if k1 is None or k2 is None:
+        sys.exit(1)
 
-        kstat = {}
+    del k1[0:2]
+    del k2[0:2]
+    k = k1 + k2
+    kstat = {}
 
-        for s in k:
-            if not s:
-                continue
+    for s in k:
+        if not s:
+            continue
 
-            name, value = s.name, s.value
-
-            if "arcstats" in name:
-                # Trims 'kstat.zfs.misc.arcstats' from the name
-                kstat[name[24:]] = int(value)
-            else:
-                kstat["zfetch_" + name[27:]] = int(value)
-
-elif sys.platform.startswith('linux'):
-    def kstat_update():
-        global kstat
-
-        k1 = [line.strip() for line in open('/proc/spl/kstat/zfs/arcstats')]
-
-        k2 = ["zfetch_" + line.strip() for line in
-             open('/proc/spl/kstat/zfs/zfetchstats')]
-
-        if k1 is None or k2 is None:
-            sys.exit(1)
-
-        del k1[0:2]
-        del k2[0:2]
-        k = k1 + k2
-        kstat = {}
-
-        for s in k:
-            if not s:
-                continue
-
-            name, unused, value = s.split()
-            kstat[name] = int(value)
+        name, unused, value = s.split()
+        kstat[name] = int(value)
 
 
 def detailed_usage():
