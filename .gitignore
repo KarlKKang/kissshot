@@ -1,2 +1,3 @@
 .DS_Store
 *.txz
+/containers/immich/caddy
