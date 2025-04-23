@@ -37,12 +37,16 @@ function main(array $fstrim_mounts, array $zpools): void
         return;
     }
     foreach ($fstrim_mounts as $mountpoint) {
-        if (!system_command('fstrim -v ' . escapeshellarg($mountpoint))) {
+        if (system_command('fstrim -v ' . escapeshellarg($mountpoint))) {
+            logger('Trimmed mountpoint: ' . $mountpoint, LOG_LEVEL::INFO);
+        } else {
             logger('Cannot run fstrim on mountpoint: ' . $mountpoint, LOG_LEVEL::ERROR);
         }
     }
     foreach ($zpools as $zpool) {
-        if (!system_command('zpool trim -w ' . escapeshellarg($zpool))) {
+        if (system_command('zpool trim -w ' . escapeshellarg($zpool))) {
+            logger('Trimmed zpool: ' . $zpool, LOG_LEVEL::INFO);
+        } else {
             logger('Cannot run zpool trim on zpool: ' . $zpool, LOG_LEVEL::ERROR);
         }
     }
