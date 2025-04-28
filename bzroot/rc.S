@@ -114,19 +114,23 @@ else
 fi
 
 # check initial files used to boot
-bzcheck(){
+bzcheck_custom(){
   local BZFILE=$1
+  local BZFILE_PATH=$2
   if [[ -f /boot/config/skipbzcheck ]]; then
     /bin/echo "Skipping $BZFILE checksum verification"
     return
   fi
   /bin/echo "Verifying $BZFILE checksum ..."
-  [[ -f "/boot/$BZFILE" ]] || abort "$BZFILE not present"
+  [[ -f "$BZFILE_PATH" ]] || abort "$BZFILE not present"
   local BZFILECHK="$BZFILE.sha256"
   [[ -f "/boot/$BZFILECHK" ]] || abort "$BZFILECHK not present"
-  local HASH1=$(/bin/sha256sum /boot/$BZFILE)
+  local HASH1=$(/bin/sha256sum $BZFILE_PATH)
   local HASH2=$(/bin/cat /boot/$BZFILECHK)
   [[ ${HASH1:0:64} != ${HASH2:0:64} ]] && abort "$BZFILE checksum error"
+}
+bzcheck(){
+  bzcheck_custom "$1" "/boot/$1"
 }
 
 bzmount(){
@@ -141,20 +145,21 @@ bzmount(){
 }
 
 if [[ $UNRAIDROOT == "" ]]; then
+  /bin/cp /boot/bzfirmware /usr
+  /bin/cp /boot/bzmodules /lib
+
   bzcheck "bzimage"
   bzcheck "bzroot"
   bzcheck "bzroot-gui"
   bzcheck "bzmodules"
-  bzcheck "bzfirmware"
-  if [[ -f /boot/config/fastusr ]]; then
-    /bin/cp /boot/bzfirmware /usr
-    bzmount "usr" "bzfirmware" "usr"
-  else
-    bzmount "boot" "bzfirmware" "usr"
-  fi
-  bzmount "boot" "bzmodules" "lib"
+  bzcheck_custom "bzfirmware" "/usr/bzfirmware"
+  bzcheck_custom "bzmodules" "/lib/bzmodules"
+
+  bzmount "usr" "bzfirmware" "usr"
+  bzmount "lib" "bzmodules" "lib"
 
   # now that /usr is mounted make /etc/rc.d a symlink
+  /bin/mv -f /etc/rc.d/rc.S /usr/local/etc/rc.d
   /bin/rm -rf /etc/rc.d
   /bin/ln -sf /usr/local/etc/rc.d /etc
 
