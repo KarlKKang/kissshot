@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.04.28">
-<!ENTITY md5       "2ebcceb021d1de70566c1bdf4cd9d08c">
+<!ENTITY version   "2025.04.29">
+<!ENTITY md5       "38d1ec39b443823e8b2213eb331faaa8">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.04.29
+- Add hourly health check for ZFS and btrfs.
+
 ###2025.04.28
 - Wait for ZVOL to become available before mounting.
 
