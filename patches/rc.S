@@ -111,6 +111,9 @@ else
     echo "$FSCK"
   fi
   /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed $DEVICE /boot || abort "cannot mount $DEVICE"
+  if [ -f /boot/config.img ]; then
+    /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,nodiscard /boot/config.img /boot/config || abort "cannot mount /boot/config.img"
+  fi
 fi
 
 # check initial files used to boot
@@ -184,6 +187,10 @@ fi
 if [[ $NONVFAT == btrfs || $NONVFAT == xfs ]]; then
   /usr/bin/chown -R root:root /boot
   /usr/bin/chmod -R 644 /boot
+elif [ -f /boot/config.img ]; then
+  /usr/bin/chown -R root:root /boot/config
+  /usr/bin/find /boot/config -type d -exec /usr/bin/chmod 700 {} \;
+  /usr/bin/find /boot/config -type f -exec /usr/bin/chmod 600 {} \;
 fi
 
 # invoke testing hook (only for test versions)

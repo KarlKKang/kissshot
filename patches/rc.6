@@ -233,7 +233,7 @@ fi
 # limetech - but not /, /lib, /usr or /boot (yet)
 log "Unmounting local file systems:"
 EXCLUDE_TYPES=("proc" "sysfs" "tmpfs" "devtmpfs" "devpts" "nfsd")
-EXCLUDE_PATHS=("/" "/lib" "/usr" "/boot")
+EXCLUDE_PATHS=("/" "/lib" "/usr" "/boot" "/boot/config")
 while IFS= read -r LINE; do
   MOUNT_TYPE=$(/bin/echo "$LINE" | awk '{print $3}')
   MOUNT_PATH=$(/bin/echo "$LINE" | awk '{print $2}')
@@ -260,7 +260,13 @@ fi
 /bin/sync
 
 log "Remounting /boot read-only:"
-run /bin/mount -v -o remount,ro /boot
+if /bin/mountpoint -q /boot/config; then
+  run /bin/umount -v /boot/config
+  run /bin/mount -v -o remount,ro /boot
+  run /bin/mount -v -t btrfs -o auto,ro,noatime,nodiratime,nodiscard /boot/config.img /boot/config
+else
+  run /bin/mount -v -o remount,ro /boot
+fi
 
 log "Remounting /lib read-only:"
 run /bin/mount -v -o remount,ro /lib
