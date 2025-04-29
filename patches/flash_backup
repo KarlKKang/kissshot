@@ -41,6 +41,8 @@ if (isset($zip)) {
   }
   foreach (glob("*",GLOB_NOSORT) as $file) {
     if (is_dir($file)) continue;
+    if (str_ends_with($file,".old")) continue;
+    if ($file === "config.img") continue;
     exec("zip -q ".escapeshellarg($zip)." ".escapeshellarg($file));
   }
   symlink($zip,"$docroot/$backup");
