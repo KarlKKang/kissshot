@@ -88,7 +88,7 @@ rm -f /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
 rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
 
 # Remove old 'bundle' files.
-rm -f $(ls /boot/config/plugins/&name;/&name;*.txz 2&gt;&amp;1 | grep -v '&version;')
+rm -f $(ls /boot/config/plugins/&name;/&name;*.txz | grep -v '&version;') 2&gt;&amp;1
 </INLINE>
 </FILE>
 
