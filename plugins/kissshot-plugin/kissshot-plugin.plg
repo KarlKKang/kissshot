@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.04.29">
-<!ENTITY md5       "f5e09990ec95bef873ceb878a4223503">
+<!ENTITY md5       "c73507e4ef5c3d4b5877e93913900fe1">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
