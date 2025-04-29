@@ -16,6 +16,17 @@ $btrfs_mounts = [
     '/boot/config'
 ];
 
+const RUNTIME_DIR = '/mnt/user/system/health-check';
+const RUNTIME_FILE = 'runtime.json';
+
+class RuntimeState extends RuntimeStateTemplate
+{
+    public function __construct()
+    {
+        parent::__construct(RUNTIME_DIR, RUNTIME_FILE);
+    }
+}
+
 function check_zpool(string $zpool): void
 {
     $output = [];
@@ -65,12 +76,21 @@ function check_btrfs(string $mountpoint): void
 
 function main(array $zpools, array $btrfs_mounts): void
 {
+    if (!UnraidStatus::array_started()) {
+        return;
+    }
+    try {
+        $runtime = new RuntimeState();
+    } catch (RuntimeStateException) {
+        return;
+    }
     foreach ($zpools as $zpool) {
         check_zpool($zpool);
     }
     foreach ($btrfs_mounts as $mountpoint) {
         check_btrfs($mountpoint);
     }
+    $runtime->commit();
 }
 
 main($zpools, $btrfs_mounts);
