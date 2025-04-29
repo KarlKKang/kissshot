@@ -12,6 +12,7 @@ if [[ ! -d "$BZ_SCRIPT_DIR" ]]; then
     echo "Error: Directory $BZ_SCRIPT_DIR does not exist."
     exit 1
 fi
+sh "$BZ_SCRIPT_DIR/cleanup.sh"
 sh "$SCRIPT_DIR/revert.sh" "$1"
 sh "$BZ_SCRIPT_DIR/unpack.sh"
 sh "$BZ_SCRIPT_DIR/patch.sh"
