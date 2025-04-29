@@ -8,10 +8,6 @@ const NOTIFICATION_TITLE = 'Health Check';
 
 require __DIR__ . '/helper.php';
 
-$zpools = [
-    'kokorowatari',
-    'golden_chocolate',
-];
 $btrfs_mounts = [
     '/boot/config'
 ];
@@ -25,6 +21,23 @@ class RuntimeState extends RuntimeStateTemplate
     {
         parent::__construct(RUNTIME_DIR, RUNTIME_FILE);
     }
+}
+
+function get_zpools(): array
+{
+    $output = [];
+    $zpools = [];
+    if (!system_command('zpool list -H -o name', $output)) {
+        logger('Cannot list ZFS pools', LOG_LEVEL::ERROR);
+        return [];
+    }
+    foreach ($output as $line) {
+        if (empty($line)) {
+            continue;
+        }
+        $zpools[] = $line;
+    }
+    return $zpools;
 }
 
 function check_zpool(string $zpool): void
@@ -87,7 +100,7 @@ function check_btrfs(string $mountpoint, bool $scrub): void
     }
 }
 
-function main(array $zpools, array $btrfs_mounts): void
+function main(array $btrfs_mounts): void
 {
     if (!UnraidStatus::array_started()) {
         return;
@@ -97,6 +110,7 @@ function main(array $zpools, array $btrfs_mounts): void
     } catch (RuntimeStateException) {
         return;
     }
+    $zpools = get_zpools();
     foreach ($zpools as $zpool) {
         check_zpool($zpool);
     }
@@ -109,4 +123,4 @@ function main(array $zpools, array $btrfs_mounts): void
     $runtime->commit();
 }
 
-main($zpools, $btrfs_mounts);
+main($btrfs_mounts);
