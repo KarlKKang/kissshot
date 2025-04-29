@@ -33,7 +33,9 @@ function check_zpool(string $zpool): void
             $healthy = false;
         }
     }
-    if (!$healthy) {
+    if ($healthy) {
+        logger('ZFS pool is healthy: ' . $zpool);
+    } else {
         logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
     }
 }
@@ -48,7 +50,9 @@ function check_btrfs(string $mountpoint): void
         logger('Cannot get btrfs status for: ' . $mountpoint, LOG_LEVEL::ERROR);
         return;
     }
-    if ($retval !== 0) {
+    if ($retval === 0) {
+        logger('Btrfs device is healthy: ' . $mountpoint);
+    } else {
         foreach ($output as $line) {
             if (empty($line)) {
                 continue;
