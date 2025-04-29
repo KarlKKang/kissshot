@@ -162,7 +162,6 @@ if [[ $UNRAIDROOT == "" ]]; then
   bzmount "lib" "bzmodules" "lib"
 
   # now that /usr is mounted make /etc/rc.d a symlink
-  /bin/mv -f /etc/rc.d/rc.S /usr/local/etc/rc.d
   /bin/rm -rf /etc/rc.d
   /bin/ln -sf /usr/local/etc/rc.d /etc
 
