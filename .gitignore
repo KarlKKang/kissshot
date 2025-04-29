@@ -7,3 +7,6 @@
 /patches/bzroot/bzroot
 /patches/bzroot/bzroot.part
 /patches/bzroot/bzroot.sha256
+/patches/bzfirmware/usr
+/patches/bzfirmware/bzfirmware
+/patches/bzfirmware/bzfirmware.sha256
