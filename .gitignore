@@ -2,8 +2,8 @@
 *.txz
 /containers/immich/caddy
 /containers/zfs-arcstat/modinfo
-/bzroot/root
-/bzroot/microcode
-/bzroot/bzroot
-/bzroot/bzroot.part
-/bzroot/bzroot.sha256
+/patches/bzroot/root
+/patches/bzroot/microcode
+/patches/bzroot/bzroot
+/patches/bzroot/bzroot.part
+/patches/bzroot/bzroot.sha256
