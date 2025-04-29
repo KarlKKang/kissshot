@@ -51,8 +51,21 @@ function check_zpool(string $zpool): void
     }
 }
 
-function check_btrfs(string $mountpoint): void
+function check_btrfs(string $mountpoint, bool $scrub): void
 {
+    $output = [];
+    if ($scrub) {
+        if (!system_command('btrfs scrub start -B ' . escapeshellarg($mountpoint), $output)) {
+            logger('Btrfs scrub error on: ' . $mountpoint, LOG_LEVEL::ERROR);
+            return;
+        }
+        foreach ($output as $line) {
+            if (empty($line)) {
+                continue;
+            }
+            logger($line);
+        }
+    }
     $output = [];
     try {
         exec('btrfs dev stats -c ' . escapeshellarg($mountpoint), $output, $retval);
@@ -87,8 +100,11 @@ function main(array $zpools, array $btrfs_mounts): void
     foreach ($zpools as $zpool) {
         check_zpool($zpool);
     }
+    $current_month = date('Y-m');
+    $last_scrub = $runtime->state['last_scrub'] ?? null;
+    $runtime->state['last_scrub'] = $current_month;
     foreach ($btrfs_mounts as $mountpoint) {
-        check_btrfs($mountpoint);
+        check_btrfs($mountpoint, $last_scrub !== $current_month);
     }
     $runtime->commit();
 }
