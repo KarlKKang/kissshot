@@ -46,6 +46,9 @@ function system_command(string $command, array &$output = []): bool
     if ($retval !== 0 || $result === false) {
         logger('Command exited with error code ' . $retval . ': ' . $command);
         foreach ($output as $line) {
+            if (empty($line)) {
+                continue;
+            }
             logger($line);
         }
         return false;
