@@ -76,12 +76,37 @@ function mount(string $dataset, string|null $mountpoint): bool
     return true;
 }
 
+function wait_for_device(string $device_path): bool
+{
+    $timeout = 30;
+    while ($timeout > 0) {
+        try {
+            exec('lsblk ' . escapeshellarg($device_path), $output, $retval);
+            if ($retval === 0) {
+                return true;
+            }
+        } catch (ValueError $e) {
+            logger($e->getMessage());
+            logger('Cannot check device: ' . $device_path, LOG_LEVEL::ERROR);
+            return false;
+        }
+        sleep(1);
+        $timeout--;
+    }
+    logger('Timeout waiting for device: ' . $device_path, LOG_LEVEL::ERROR);
+    return false;
+}
+
 function mount_zvol(string $dataset, string $mountpoint): bool
 {
     if (!create_mountpoint($mountpoint)) {
         return false;
     }
-    if (!system_command('mount ' . escapeshellarg('/dev/zvol/' . $dataset) . ' ' . escapeshellarg($mountpoint))) {
+    $device_path = '/dev/zvol/' . $dataset;
+    if (!wait_for_device($device_path)) {
+        return false;
+    }
+    if (!system_command('mount ' . escapeshellarg($device_path) . ' ' . escapeshellarg($mountpoint))) {
         logger('Cannot mount ZFS volume: ' . $dataset, LOG_LEVEL::ERROR);
         return false;
     }

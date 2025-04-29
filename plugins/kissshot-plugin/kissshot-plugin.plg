@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.04.23">
-<!ENTITY md5       "8f0e10bbead41a336ba6c7b72cffd235">
+<!ENTITY version   "2025.04.28">
+<!ENTITY md5       "2ebcceb021d1de70566c1bdf4cd9d08c">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.04.28
+- Wait for ZVOL to become available before mounting.
+
 ###2025.04.23
 - Log successful TRIM operations.
 
