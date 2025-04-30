@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.04.29">
-<!ENTITY md5       "c73507e4ef5c3d4b5877e93913900fe1">
+<!ENTITY version   "2025.04.30">
+<!ENTITY md5       "1039d97cca88d8edd16460f874cc0321">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.04.30
+- Get all mounted btrfs devices programatically.
+
 ###2025.04.29
 - Add hourly health check for ZFS and btrfs.
 - Btrfs monthly scrub as a health check routine.

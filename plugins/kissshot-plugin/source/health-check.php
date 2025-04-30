@@ -8,10 +8,6 @@ const NOTIFICATION_TITLE = 'Health Check';
 
 require __DIR__ . '/helper.php';
 
-$btrfs_mounts = [
-    '/boot/config'
-];
-
 const RUNTIME_DIR = '/mnt/user/system/health-check';
 const RUNTIME_FILE = 'runtime.json';
 
@@ -40,6 +36,32 @@ function get_zpools(): array
     return $zpools;
 }
 
+function get_btrfs_devices(): array
+{
+    $output = [];
+    $devices = [];
+    if (!system_command('btrfs filesystem show -m', $output)) {
+        logger('Cannot list Btrfs devices', LOG_LEVEL::ERROR);
+        return [];
+    }
+    foreach ($output as $line) {
+        if (empty($line)) {
+            continue;
+        }
+        $line = trim($line);
+        if (!str_starts_with($line, 'devid ')) {
+            continue;
+        }
+        $path_index = strpos($line, 'path ');
+        if ($path_index === false) {
+            continue;
+        }
+        $path = substr($line, $path_index + 5);
+        $devices[] = trim($path);
+    }
+    return $devices;
+}
+
 function check_zpool(string $zpool): void
 {
     $output = [];
@@ -64,12 +86,12 @@ function check_zpool(string $zpool): void
     }
 }
 
-function check_btrfs(string $mountpoint, bool $scrub): void
+function check_btrfs(string $device, bool $scrub): void
 {
     $output = [];
     if ($scrub) {
-        if (!system_command('btrfs scrub start -B ' . escapeshellarg($mountpoint), $output)) {
-            logger('Btrfs scrub error on: ' . $mountpoint, LOG_LEVEL::ERROR);
+        if (!system_command('btrfs scrub start -B ' . escapeshellarg($device), $output)) {
+            logger('Btrfs scrub error on: ' . $device, LOG_LEVEL::ERROR);
             return;
         }
         foreach ($output as $line) {
@@ -81,14 +103,14 @@ function check_btrfs(string $mountpoint, bool $scrub): void
     }
     $output = [];
     try {
-        exec('btrfs dev stats -c ' . escapeshellarg($mountpoint), $output, $retval);
+        exec('btrfs dev stats -c ' . escapeshellarg($device), $output, $retval);
     } catch (ValueError $e) {
         logger($e->getMessage());
-        logger('Cannot get btrfs status for: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Cannot get btrfs status for: ' . $device, LOG_LEVEL::ERROR);
         return;
     }
     if ($retval === 0) {
-        logger('Btrfs device is healthy: ' . $mountpoint);
+        logger('Btrfs device is healthy: ' . $device);
     } else {
         foreach ($output as $line) {
             if (empty($line)) {
@@ -96,11 +118,11 @@ function check_btrfs(string $mountpoint, bool $scrub): void
             }
             logger($line);
         }
-        logger('Btrfs errors detected on: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Btrfs errors detected on: ' . $device, LOG_LEVEL::ERROR);
     }
 }
 
-function main(array $btrfs_mounts): void
+function main(): void
 {
     if (!UnraidStatus::array_started()) {
         return;
@@ -117,10 +139,11 @@ function main(array $btrfs_mounts): void
     $current_month = date('Y-m');
     $last_scrub = $runtime->state['last_scrub'] ?? null;
     $runtime->state['last_scrub'] = $current_month;
-    foreach ($btrfs_mounts as $mountpoint) {
-        check_btrfs($mountpoint, $last_scrub !== $current_month);
+    $btrfs_devices = get_btrfs_devices();
+    foreach ($btrfs_devices as $device) {
+        check_btrfs($device, $last_scrub !== $current_month);
     }
     $runtime->commit();
 }
 
-main($btrfs_mounts);
+main();
