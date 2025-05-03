@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-cd "$(dirname "$0")"
 
 if [[ "$#" -ne 1 ]]; then
     echo "Usage: $0 <BZFILE>"
