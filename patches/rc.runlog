@@ -8,13 +8,6 @@
 
 BASENAME=$(basename "$0")
 
-run(){
-  # log command to syslog
-  /usr/bin/logger -t $BASENAME -- "$@"
-  # run command
-  "$@"
-}
-
 log(){
   # log message to syslog
   while IFS=$'\n' read -r LINE; do
@@ -22,4 +15,11 @@ log(){
   done <<< ${1:-$(</dev/stdin)}
   # echo message to console
   [[ -t 1 && -n $1 ]] && /bin/echo "$BASENAME: $1"
+}
+
+run(){
+  # log command
+  log "$*"
+  # run command
+  "$@"
 }
