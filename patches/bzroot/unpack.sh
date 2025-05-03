@@ -5,13 +5,7 @@ cd "$(dirname "$0")"
 
 BZFILE="bzroot"
 
-cp /boot/$BZFILE ./$BZFILE
-HASH1=$(sha256sum ./$BZFILE)
-HASH2=$(cat /boot/$BZFILE.sha256)
-if [ "${HASH1:0:64}" != "${HASH2:0:64}" ]; then
-    echo "$BZFILE hash mismatch"
-    exit 1
-fi
+sh ../tools/cp_bzfile.sh $BZFILE
 
 dd if=./$BZFILE bs=512 "count=$(cpio -ivt -H newc <./$BZFILE 2>&1 >/dev/null | awk '{print $1}')" of=./microcode
 mkdir -p ./root
