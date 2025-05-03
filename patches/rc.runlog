@@ -11,8 +11,8 @@ BASENAME=$(basename "$0")
 run(){
   # log command to syslog
   /usr/bin/logger -t $BASENAME -- "$@"
-  # run command - dismiss all output
-  "$@" &>/dev/null
+  # run command
+  "$@"
 }
 
 log(){
