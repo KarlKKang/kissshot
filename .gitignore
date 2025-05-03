@@ -10,3 +10,8 @@
 /patches/bzfirmware/usr
 /patches/bzfirmware/bzfirmware
 /patches/bzfirmware/bzfirmware.sha256
+/patches/kernel/bzmodules
+/patches/kernel/bzmodules.sha256
+/patches/kernel/bzimage
+/patches/kernel/bzimage.sha256
+/patches/kernel/lib
