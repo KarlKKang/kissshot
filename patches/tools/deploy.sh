@@ -11,7 +11,7 @@ if [ -f "/boot/$1.old" ] || [ -f "/boot/$1.sha256.old" ]; then
     exit 1
 fi
 
-BZFILE="$(dirname "$0")/$1/$1"
+BZFILE="$(dirname "$0")/../$1/$1"
 mv "/boot/$1" "/boot/$1.old"
 mv "/boot/$1.sha256" "/boot/$1.sha256.old"
 mv "$BZFILE" "/boot/$1"

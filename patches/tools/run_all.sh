@@ -7,9 +7,9 @@ if [[ "$#" -ne 1 ]]; then
     exit 1
 fi
 SCRIPT_DIR="$(dirname "$0")"
-BZ_SCRIPT_DIR="$SCRIPT_DIR/$1"
+BZ_SCRIPT_DIR="$SCRIPT_DIR/../$1"
 if [[ ! -d "$BZ_SCRIPT_DIR" ]]; then
-    echo "Error: Directory $BZ_SCRIPT_DIR does not exist."
+    echo "Error: No patch found for $1"
     exit 1
 fi
 sh "$BZ_SCRIPT_DIR/cleanup.sh"
