@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.04">
-<!ENTITY md5       "da6178213b989e6b99d4eb58402bc664">
+<!ENTITY md5       "5ff6ff980734ee428ab3e94e81591c09">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,7 @@
 <CHANGES>
 ###2025.05.04
 - Unmount non-root ZFS datasets before stopping the array.
+- Log `zpool status` non-zero exit codes as unhealthy.
 
 ###2025.04.30
 - Get all mounted btrfs devices programatically.

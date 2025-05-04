@@ -66,7 +66,7 @@ function check_zpool(string $zpool): void
 {
     $output = [];
     if (!system_command('zpool status -x -v ' . escapeshellarg($zpool), $output)) {
-        logger('Cannot get zpool status for: ' . $zpool, LOG_LEVEL::ERROR);
+        logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
         return;
     }
     $healthy = true;
@@ -101,23 +101,9 @@ function check_btrfs(string $device, bool $scrub): void
             logger($line);
         }
     }
-    $output = [];
-    try {
-        exec('btrfs dev stats -c ' . escapeshellarg($device), $output, $retval);
-    } catch (ValueError $e) {
-        logger($e->getMessage());
-        logger('Cannot get btrfs status for: ' . $device, LOG_LEVEL::ERROR);
-        return;
-    }
-    if ($retval === 0) {
+    if (system_command('btrfs dev stats -c ' . escapeshellarg($device))) {
         logger('Btrfs device is healthy: ' . $device);
     } else {
-        foreach ($output as $line) {
-            if (empty($line)) {
-                continue;
-            }
-            logger($line);
-        }
         logger('Btrfs errors detected on: ' . $device, LOG_LEVEL::ERROR);
     }
 }
