@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export MAJOR_VER="6"
+export FULL_VER="6.6.78"
+export ZFS_VER="2.2.7"
+
 set -e
 
 SCRIPT_DIR="$(dirname "$0")"
