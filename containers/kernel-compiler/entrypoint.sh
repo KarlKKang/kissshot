@@ -40,6 +40,7 @@ cp -a "$PATCH_DIR/." ./
 find . -type f -iname '*.patch' -print0 | xargs -n1 -0 patch -p1 -i
 
 make olddefconfig
+read -rp "Press enter to continue"
 make "-j$(nproc)" bzImage
 make "-j$(nproc)"
 make "-j$(nproc)" modules
@@ -72,3 +73,6 @@ cp "$SRC_WD/.config" "$PATCH_DIR/.config"
 rm -rf "$OUT_DIR/lib/modules"
 mkdir -p "$OUT_DIR/lib/modules/$KERNEL_RELEASE"
 cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/." "$OUT_DIR/lib/modules/$KERNEL_RELEASE/"
+
+echo "Kernel compiled successfully."
+read -rp "Press enter to exit"
