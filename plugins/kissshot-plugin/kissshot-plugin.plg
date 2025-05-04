@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.04.30">
-<!ENTITY md5       "1039d97cca88d8edd16460f874cc0321">
+<!ENTITY version   "2025.05.04">
+<!ENTITY md5       "da6178213b989e6b99d4eb58402bc664">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.04
+- Unmount non-root ZFS datasets before stopping the array.
+
 ###2025.04.30
 - Get all mounted btrfs devices programatically.
 

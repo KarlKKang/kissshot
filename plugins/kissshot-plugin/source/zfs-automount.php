@@ -132,6 +132,49 @@ function unmount_zvol(string $mountpoint): void
     logger('Unmounted ZFS volume: ' . $mountpoint);
 }
 
+function unmount_dataset(string $dataset): void
+{
+    $wait = 1;
+    while (true) {
+        if (!system_command('zfs unmount ' . escapeshellarg($dataset))) {
+            logger('Retry unmounting dataset after ' . $wait . ' seconds: ' . $dataset);
+            sleep($wait);
+            $wait = min($wait * 2, 10);
+            continue;
+        }
+        logger('Unmounted dataset: ' . $dataset);
+        return;
+    }
+}
+
+function unmount_nonroot_datasets(): void
+{
+    $output = [];
+    if (!system_command('zfs list -t filesystem -H -o name,mounted -S mountpoint', $output)) {
+        logger('Cannot list ZFS datasets', LOG_LEVEL::ERROR);
+        return;
+    }
+    foreach ($output as $line_str) {
+        $line = explode("\t", $line_str);
+        if (count($line) !== 2) {
+            logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
+            return;
+        }
+        [$name, $mounted] = $line;
+        if ($mounted !== 'yes') {
+            continue;
+        }
+        $slash_pos = strpos($name, '/');
+        if ($slash_pos === false) {
+            continue;
+        }
+        if ($slash_pos !== strrpos($name, '/')) {
+            continue;
+        }
+        unmount_dataset($name);
+    }
+}
+
 function main(array $argv, array $zvol_mounts): void
 {
     if (count($argv) !== 2) {
@@ -150,16 +193,15 @@ function main(array $argv, array $zvol_mounts): void
         foreach ($zvol_mounts as $dataset => $mountpoint) {
             mount_zvol($dataset, $mountpoint);
         }
-    } elseif ($action === 'unmount_zvols') {
+    } elseif ($action === 'unmount') {
         foreach ($zvol_mounts as $mountpoint) {
             unmount_zvol($mountpoint);
         }
-    } elseif ($action === 'unload_keys') {
+        unmount_nonroot_datasets();
         unload_all_keys();
     } else {
         logger('Invalid action: ' . $action, LOG_LEVEL::ERROR);
     }
-
 }
 
 main($argv, $zvol_mounts);
