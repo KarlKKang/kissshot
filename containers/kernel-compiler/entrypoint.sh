@@ -66,8 +66,6 @@ cd "zfs-$ZFS_VER"
 make -j"$(nproc)"
 make -C module INSTALL_MOD_PATH=$MODULE_DIR modules_install
 
-/bin/bash
-
 cp "$SRC_WD/arch/x86_64/boot/bzImage" "$OUT_DIR/bzimage"
 cp "$SRC_WD/.config" "$PATCH_DIR/.config"
 rm -rf "$OUT_DIR/lib/modules"
