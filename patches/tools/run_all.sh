@@ -53,3 +53,4 @@ patch
 pack
 deploy
 cleanup
+echo "All tasks completed successfully."
