@@ -40,10 +40,10 @@ pack() {
 }
 
 deploy() {
-    sh "$SCRIPT_DIR/deploy.sh" "bzroot" &&
-        sh "$SCRIPT_DIR/deploy.sh" "bzfirmware" &&
-        sh "$SCRIPT_DIR/deploy.sh" "bzimage" &&
-        sh "$SCRIPT_DIR/deploy.sh" "bzmodules"
+    sh "$SCRIPT_DIR/deploy.sh" "bzroot" "$SCRIPT_DIR/../bzroot/bzroot" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzfirmware" "$SCRIPT_DIR/../bzfirmware/bzfirmware" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzimage" "$SCRIPT_DIR/../kernel/bzimage" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzmodules" "$SCRIPT_DIR/../kernel/bzmodules"
 }
 
 cleanup
@@ -51,6 +51,8 @@ revert
 unpack
 patch
 pack
+echo "All packages generated successfully."
+read -rp "Please check the packages and press enter to continue"
 deploy
 cleanup
 echo "All tasks completed successfully."
