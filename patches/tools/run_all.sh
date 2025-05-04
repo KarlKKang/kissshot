@@ -2,20 +2,50 @@
 
 set -e
 
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: $0 <BZFILE>"
-    exit 1
-fi
 SCRIPT_DIR="$(dirname "$0")"
-BZ_SCRIPT_DIR="$SCRIPT_DIR/../$1"
-if [[ ! -d "$BZ_SCRIPT_DIR" ]]; then
-    echo "Error: No patch found for $1"
-    exit 1
-fi
-sh "$BZ_SCRIPT_DIR/cleanup.sh"
-sh "$SCRIPT_DIR/revert.sh" "$1"
-sh "$BZ_SCRIPT_DIR/unpack.sh"
-sh "$BZ_SCRIPT_DIR/patch.sh"
-sh "$BZ_SCRIPT_DIR/pack.sh"
-sh "$SCRIPT_DIR/deploy.sh" "$1"
-sh "$BZ_SCRIPT_DIR/cleanup.sh"
+
+cleanup() {
+    sh "$SCRIPT_DIR/../bzroot/cleanup.sh" &&
+        sh "$SCRIPT_DIR/../bzfirmware/cleanup.sh" &&
+        sh "$SCRIPT_DIR/../kernel/cleanup.sh"
+}
+
+revert() {
+    sh "$SCRIPT_DIR/revert.sh" "bzroot" &&
+        sh "$SCRIPT_DIR/revert.sh" "bzfirmware" &&
+        sh "$SCRIPT_DIR/revert.sh" "bzimage" &&
+        sh "$SCRIPT_DIR/revert.sh" "bzmodules"
+}
+
+unpack() {
+    sh "$SCRIPT_DIR/../bzroot/unpack.sh" &&
+        sh "$SCRIPT_DIR/../bzfirmware/unpack.sh" &&
+        sh "$SCRIPT_DIR/../kernel/unpack.sh"
+}
+
+patch() {
+    sh "$SCRIPT_DIR/../bzroot/patch.sh" &&
+        sh "$SCRIPT_DIR/../bzfirmware/patch.sh" &&
+        sh "$SCRIPT_DIR/../kernel/patch.sh"
+}
+
+pack() {
+    sh "$SCRIPT_DIR/../bzroot/pack.sh" &&
+        sh "$SCRIPT_DIR/../bzfirmware/pack.sh" &&
+        sh "$SCRIPT_DIR/../kernel/pack.sh"
+}
+
+deploy() {
+    sh "$SCRIPT_DIR/deploy.sh" "bzroot" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzfirmware" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzimage" &&
+        sh "$SCRIPT_DIR/deploy.sh" "bzmodules"
+}
+
+cleanup
+revert
+unpack
+patch
+pack
+deploy
+cleanup

@@ -6,12 +6,13 @@ if [[ "$#" -ne 1 ]]; then
     echo "Usage: $0 <BZFILE>"
     exit 1
 fi
-if [ ! -f "/boot/$1.old" ] || [ ! -f "/boot/$1.sha256.old" ]; then
+if [ ! -f "/boot/backup/$1" ] || [ ! -f "/boot/backup/$1.sha256" ]; then
     echo "No old files found. Nothing to revert."
     exit 0
 fi
 
-mv -f "/boot/$1.old" "/boot/$1"
-mv -f "/boot/$1.sha256.old" "/boot/$1.sha256"
+mv -f "/boot/backup/$1" "/boot/$1"
+mv -f "/boot/backup/$1.sha256" "/boot/$1.sha256"
+rmdir --ignore-fail-on-non-empty /boot/backup
 
 echo "Revert completed."

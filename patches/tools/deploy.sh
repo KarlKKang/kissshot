@@ -2,19 +2,19 @@
 
 set -e
 
-if [[ "$#" -ne 1 ]]; then
-    echo "Usage: $0 <BZFILE>"
+if [[ "$#" -ne 2 ]]; then
+    echo "Usage: $0 <BZFILE> <SRC_PATH>"
     exit 1
 fi
-if [ -f "/boot/$1.old" ] || [ -f "/boot/$1.sha256.old" ]; then
+if [ -f "/boot/backup/$1" ] || [ -f "/boot/backup/$1.sha256" ]; then
     echo "A previous version of $1 already exists."
     exit 1
 fi
 
-BZFILE="$(dirname "$0")/../$1/$1"
-mv "/boot/$1" "/boot/$1.old"
-mv "/boot/$1.sha256" "/boot/$1.sha256.old"
-mv "$BZFILE" "/boot/$1"
-mv "$BZFILE.sha256" "/boot/$1.sha256"
+mkdir -p /boot/backup
+mv "/boot/$1" "/boot/backup/$1"
+mv "/boot/$1.sha256" "/boot/backup/$1.sha256"
+mv "$2" "/boot/$1"
+mv "$2.sha256" "/boot/$1.sha256"
 
 echo "All files deployed successfully."

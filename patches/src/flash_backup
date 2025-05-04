@@ -17,7 +17,7 @@ require_once "$docroot/webGui/include/Wrappers.php";
 
 $var = (array)@parse_ini_file('/var/local/emhttp/var.ini');
 $dir = ['system','appdata','isos','domains'];
-$out = ['prev','previous'];
+$out = ['prev','previous','backup'];
 
 $server = isset($var['NAME']) ? str_replace(' ','_',strtolower($var['NAME'])) : 'tower';
 $mydate = date('Ymd-Hi');
@@ -41,7 +41,6 @@ if (isset($zip)) {
   }
   foreach (glob("*",GLOB_NOSORT) as $file) {
     if (is_dir($file)) continue;
-    if (str_ends_with($file,".old")) continue;
     if ($file === "config.img") continue;
     exec("zip -q ".escapeshellarg($zip)." ".escapeshellarg($file));
   }
