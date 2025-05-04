@@ -51,8 +51,6 @@ revert
 unpack
 patch
 pack
-echo "All packages generated successfully."
-read -rp "Please check the packages and press enter to continue"
 deploy
 cleanup
 echo "All tasks completed successfully."
