@@ -46,4 +46,6 @@ Therefore, I think the above solution has already achieved a decent level of int
 
 To apply the patches, just run the `tools/run_all.sh` script on the Unraid system to be patched. The `kernel-compiler` and `squashfs-tools` docker images and the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.0.1. Old files are kept in the `backup` folder on the flash drive.
 
+To move the config folder to a Btrfs image, run `tools/build_config_img.sh` on the Unraid system. The original config folder will be moved to `config.old`, which can be deleted after verifying that the new config image works.
+
 To apply new patches to an updated Unraid version, the `backup` folder needs to be deleted to avoid reverting back to the old version.

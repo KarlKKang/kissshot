@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -f "/boot/config.img" ]; then
+    echo "Config image already exists. Exiting."
+    exit 1
+fi
+
 dd if=/dev/zero of=/boot/config.img bs=1M count=1024
 mkfs.btrfs /boot/config.img
 mkdir /boot/config_new
