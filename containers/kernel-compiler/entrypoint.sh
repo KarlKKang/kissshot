@@ -72,6 +72,7 @@ make -C module INSTALL_MOD_PATH=$MODULE_DIR modules_install
 
 cp "$SRC_WD/arch/x86_64/boot/bzImage" "$OUT_DIR/bzimage"
 cp "$SRC_WD/.config" "$PATCH_DIR/.config"
+cp "$SRC_WD/System.map" "$PATCH_DIR/System.map"
 rm -rf "$OUT_DIR/lib/modules"
 mkdir -p "$OUT_DIR/lib/modules/$KERNEL_RELEASE"
 cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/." "$OUT_DIR/lib/modules/$KERNEL_RELEASE/"
