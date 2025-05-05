@@ -154,7 +154,6 @@ if [[ $UNRAIDROOT == "" ]]; then
   bzcheck "bzimage"
   bzcheck "bzroot"
   bzcheck "bzroot-gui"
-  bzcheck "bzmodules"
   bzcheck_custom "bzfirmware" "/usr/bzfirmware"
   bzcheck_custom "bzmodules" "/lib/bzmodules"
 
