@@ -77,6 +77,8 @@ rm -rf "$OUT_DIR/lib/modules"
 mkdir -p "$OUT_DIR/lib/modules/$KERNEL_RELEASE"
 cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/." "$OUT_DIR/lib/modules/$KERNEL_RELEASE/"
 
+cd /root
+
 echo "Kernel compiled successfully."
 echo "You will be dropped into a shell. Exit with proper exit code when finished checking."
 exec /bin/bash
