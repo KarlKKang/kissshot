@@ -128,9 +128,11 @@ bzcheck_custom(){
   [[ -f "$BZFILE_PATH" ]] || abort "$BZFILE not present"
   local BZFILECHK="$BZFILE.sha256"
   [[ -f "/boot/$BZFILECHK" ]] || abort "$BZFILECHK not present"
-  local HASH1=$(/bin/sha256sum $BZFILE_PATH)
-  local HASH2=$(/bin/cat /boot/$BZFILECHK)
-  [[ ${HASH1:0:64} != ${HASH2:0:64} ]] && abort "$BZFILE checksum error"
+  local HASH1
+  HASH1=$(/bin/sha256sum "$BZFILE_PATH") || abort "Cannot checksum $BZFILE"
+  local HASH2
+  HASH2=$(/bin/cat "/boot/$BZFILECHK") || abort "Cannot read $BZFILECHK"
+  [[ ${HASH1:0:64} != "${HASH2:0:64}" ]] && abort "$BZFILE checksum error"
 }
 bzcheck(){
   bzcheck_custom "$1" "/boot/$1"
