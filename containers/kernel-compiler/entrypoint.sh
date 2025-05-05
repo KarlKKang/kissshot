@@ -2,6 +2,10 @@
 
 set -e
 
+if [ "$#" -ne 0 ]; then
+    exec "$@"
+fi
+
 if [ -z "$MAJOR_VER" ]; then
     echo "Required environment variable MAJOR_VER is not set."
     exit 1
@@ -73,4 +77,5 @@ mkdir -p "$OUT_DIR/lib/modules/$KERNEL_RELEASE"
 cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/." "$OUT_DIR/lib/modules/$KERNEL_RELEASE/"
 
 echo "Kernel compiled successfully."
-read -rp "Press enter to exit"
+echo "You will be dropped into a shell. Exit with proper exit code when finished checking."
+exec /bin/bash
