@@ -7,9 +7,15 @@ if [[ "$#" -ne 1 ]]; then
     exit 1
 fi
 
-cp "/boot/$1" "./$1"
+if [[ -f "./$1" ]]; then
+    SHA256FILE="./$1.sha256"
+else
+    cp "/boot/$1" "./$1"
+    SHA256FILE="/boot/$1.sha256"
+fi
+
 HASH1=$(sha256sum "./$1")
-HASH2=$(cat "/boot/$1.sha256")
+HASH2=$(cat "$SHA256FILE")
 if [ "${HASH1:0:64}" != "${HASH2:0:64}" ]; then
     echo "$BZFILE hash mismatch"
     exit 1
