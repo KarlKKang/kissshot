@@ -144,7 +144,6 @@ abstract class RuntimeStateTemplate
 
         if (!flock($runtime_fp, LOCK_UN)) {
             self::log('Cannot unlock runtime file', LOG_LEVEL::ERROR);
-            return false;
         }
         if (!fclose($runtime_fp)) {
             self::log('Cannot close runtime file', LOG_LEVEL::ERROR);
