@@ -1,7 +1,7 @@
 import os
 import math
 
-available_cpus = 28
+available_cpus = 32
 total_cpus = 64
 
 percent_available_cpus = available_cpus / total_cpus
