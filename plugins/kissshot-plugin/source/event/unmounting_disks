@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(dirname "$0")
+
 php "$SCRIPT_DIR/../zfs-automount.php" unmount
 exit_code=$?
 if [ $exit_code -ne 0 ]; then
