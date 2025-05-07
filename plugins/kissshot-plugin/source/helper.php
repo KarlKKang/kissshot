@@ -110,6 +110,12 @@ abstract class RuntimeStateTemplate
 
     public function commit(): bool
     {
+        $runtime_fp = $this->runtime_fp;
+        if ($runtime_fp === null) {
+            throw new Exception('Double commit of runtime state');
+        }
+        $this->runtime_fp = null;
+
         if (count($this->state) === 0) {
             $state_str = '';
         } else {
@@ -121,26 +127,26 @@ abstract class RuntimeStateTemplate
         }
 
         if ($state_str !== $this->original_state_str) {
-            if (!ftruncate($this->runtime_fp, 0)) {
+            if (!ftruncate($runtime_fp, 0)) {
                 self::log('Cannot truncate runtime file', LOG_LEVEL::ERROR);
                 return false;
             }
-            if (!rewind($this->runtime_fp)) {
+            if (!rewind($runtime_fp)) {
                 self::log('Cannot rewind runtime file', LOG_LEVEL::ERROR);
                 return false;
             }
             $state_str_len = strlen($state_str);
-            if ($state_str_len > 0 && fwrite($this->runtime_fp, $state_str) !== $state_str_len) {
+            if ($state_str_len > 0 && fwrite($runtime_fp, $state_str) !== $state_str_len) {
                 self::log('Cannot write runtime state', LOG_LEVEL::ERROR);
                 return false;
             }
         }
 
-        if (!flock($this->runtime_fp, LOCK_UN)) {
+        if (!flock($runtime_fp, LOCK_UN)) {
             self::log('Cannot unlock runtime file', LOG_LEVEL::ERROR);
             return false;
         }
-        if (!fclose($this->runtime_fp)) {
+        if (!fclose($runtime_fp)) {
             self::log('Cannot close runtime file', LOG_LEVEL::ERROR);
             return false;
         }
@@ -173,11 +179,15 @@ class ArrayLock
 
     public function release(): void
     {
+        if ($this->fp === null) {
+            throw new Exception('Double release of array lock');
+        }
         if (!flock($this->fp, LOCK_UN)) {
             logger('Cannot unlock array lock file', LOG_LEVEL::ERROR);
         }
         if (!fclose($this->fp)) {
             logger('Cannot close array lock file', LOG_LEVEL::ERROR);
         }
+        $this->fp = null;
     }
 }
