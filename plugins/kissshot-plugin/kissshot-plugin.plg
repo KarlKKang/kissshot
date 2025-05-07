@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.07">
-<!ENTITY md5       "6879ac445f38ec36074e510f3c82bf74">
+<!ENTITY md5       "1b72717ac48977c13ff3cb1dd99bb55d">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -12,6 +12,7 @@
 ###2025.05.07
 - Unmount ZFS snapshots after sending to restic.
 - Execute zfs-init on `starting` event.
+- Improved array status check and runtime state file handling.
 
 ###2025.05.04
 - Unmount non-root ZFS datasets before stopping the array.
