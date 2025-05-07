@@ -93,8 +93,8 @@ abstract class RuntimeStateTemplate
             self::log('Cannot get runtime file size', LOG_LEVEL::ERROR);
             throw new RuntimeStateException();
         } else {
-            $file_contents = fread($runtime_fp, $file_size);
-            if ($file_contents === false) {
+            $file_contents = fread($runtime_fp, $file_size + 1);
+            if ($file_contents === false || strlen($file_contents) !== $file_size) {
                 self::log('Cannot read runtime file contents', LOG_LEVEL::ERROR);
                 throw new RuntimeStateException();
             }
