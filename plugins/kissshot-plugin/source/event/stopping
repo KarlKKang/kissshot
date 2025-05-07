@@ -1,0 +1,6 @@
+#!/bin/bash
+
+flock -x /root/ready rm -f /root/ready || {
+    logger -t kissshot-plugin "[error] Cannot delete the ready file"
+    /usr/local/emhttp/webGui/scripts/notify -e "kissshot-plugin" -d "Cannot delete the ready file" -i "alert"
+}

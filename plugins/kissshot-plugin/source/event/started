@@ -1,0 +1,6 @@
+#!/bin/bash
+
+touch /root/ready || {
+    logger -t kissshot-plugin "[error] Cannot create the ready file"
+    /usr/local/emhttp/webGui/scripts/notify -e "kissshot-plugin" -d "Cannot create the ready file" -i "alert"
+}

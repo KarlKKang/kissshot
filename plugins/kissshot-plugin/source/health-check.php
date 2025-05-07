@@ -110,7 +110,9 @@ function check_btrfs(string $device, bool $scrub): void
 
 function main(): void
 {
-    if (!UnraidStatus::array_started()) {
+    try {
+        $array_lock = new ArrayLock();
+    } catch (ArrayLockException) {
         return;
     }
     try {
@@ -130,6 +132,7 @@ function main(): void
         check_btrfs($device, $last_scrub !== $current_month);
     }
     $runtime->commit();
+    $array_lock->release();
 }
 
 main();

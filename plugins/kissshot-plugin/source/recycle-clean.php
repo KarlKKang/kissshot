@@ -125,7 +125,9 @@ function clean_directory(string $dir): bool
 
 function main(): void
 {
-    if (!UnraidStatus::array_started()) {
+    try {
+        $array_lock = new ArrayLock();
+    } catch (ArrayLockException) {
         return;
     }
     try {
@@ -148,6 +150,7 @@ function main(): void
         clean_directory($recycle_dir);
     }
     $runtime->commit();
+    $array_lock->release();
 }
 
 main();

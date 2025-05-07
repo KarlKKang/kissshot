@@ -28,7 +28,9 @@ class RuntimeState extends RuntimeStateTemplate
 
 function main(array $fstrim_mounts, array $zpools): void
 {
-    if (!UnraidStatus::array_started()) {
+    try {
+        $array_lock = new ArrayLock();
+    } catch (ArrayLockException) {
         return;
     }
     try {
@@ -51,6 +53,7 @@ function main(array $fstrim_mounts, array $zpools): void
         }
     }
     $runtime->commit();
+    $array_lock->release();
 }
 
 main($fstrim_mounts, $zpools);

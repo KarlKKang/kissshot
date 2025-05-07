@@ -440,7 +440,9 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
 
 function main(array $config): void
 {
-    if (!UnraidStatus::array_started()) {
+    try {
+        $array_lock = new ArrayLock();
+    } catch (ArrayLockException) {
         return;
     }
 
@@ -468,6 +470,8 @@ function main(array $config): void
     }
     send_to_restic($snapshots_to_restic, $runtime);
     $runtime->commit();
+
+    $array_lock->release();
 }
 
 main($config);

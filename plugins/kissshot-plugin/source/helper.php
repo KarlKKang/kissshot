@@ -147,29 +147,37 @@ abstract class RuntimeStateTemplate
         return true;
     }
 
-    private static function log(string $message, LOG_LEVEL $level): void 
+    private static function log(string $message, LOG_LEVEL $level): void
     {
         logger(static::class . ': ' . $message, $level);
     }
 }
 
-class UnraidStatus
-{
-    private static array|null|false $unraid_vars = null;
+class ArrayLockException extends Exception {}
 
-    private static function get_unraid_vars(): array|false
+class ArrayLock
+{
+    private mixed $fp;
+    private const LOCK_FILE = '/root/ready';
+
+    public function __construct()
     {
-        if (self::$unraid_vars === null) {
-            self::$unraid_vars = parse_ini_file('/var/local/emhttp/var.ini');
-            if (self::$unraid_vars === false) {
-                logger('Cannot read Unraid variables', LOG_LEVEL::ERROR);
-            }
+        $this->fp = fopen(self::LOCK_FILE, 'r');
+        if ($this->fp === false) {
+            throw new ArrayLockException();
         }
-        return self::$unraid_vars;
+        if (flock($this->fp, LOCK_SH | LOCK_NB) === false) {
+            throw new ArrayLockException();
+        }
     }
 
-    public static function array_started(): bool
+    public function release(): void
     {
-        return (self::get_unraid_vars()['mdState'] ?? null) === 'STARTED';
+        if (!flock($this->fp, LOCK_UN)) {
+            logger('Cannot unlock array lock file', LOG_LEVEL::ERROR);
+        }
+        if (!fclose($this->fp)) {
+            logger('Cannot close array lock file', LOG_LEVEL::ERROR);
+        }
     }
 }
