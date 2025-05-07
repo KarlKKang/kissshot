@@ -86,18 +86,19 @@ abstract class RuntimeStateTemplate
         $this->runtime_fp = $runtime_fp;
 
         $file_size = filesize($file_path);
+        if ($file_size === false) {
+            self::log('Cannot get runtime file size', LOG_LEVEL::ERROR);
+            throw new RuntimeStateException();
+        }
+        $file_contents = fread($runtime_fp, $file_size + 1);
+        if ($file_contents === false || strlen($file_contents) !== $file_size) {
+            self::log('Cannot read runtime file contents', LOG_LEVEL::ERROR);
+            throw new RuntimeStateException();
+        }
         if ($file_size === 0) {
             $this->state = [];
             $this->original_state_str = '';
-        } else if ($file_size === false) {
-            self::log('Cannot get runtime file size', LOG_LEVEL::ERROR);
-            throw new RuntimeStateException();
         } else {
-            $file_contents = fread($runtime_fp, $file_size + 1);
-            if ($file_contents === false || strlen($file_contents) !== $file_size) {
-                self::log('Cannot read runtime file contents', LOG_LEVEL::ERROR);
-                throw new RuntimeStateException();
-            }
             $this->original_state_str = $file_contents;
             $state = json_decode($file_contents, true);
             if (!is_array($state)) {
