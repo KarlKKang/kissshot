@@ -372,6 +372,15 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
     $snapshots_to_restic = array_merge($snapshots_to_restic, $txg_snapshots_to_restic);
 }
 
+function unmount_snapshots(array $snapshots): void
+{
+    foreach ($snapshots as $dataset => $snapshot_name) {
+        if (!system_command('umount ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name))) {
+            logger('Cannot unmount snapshot ' . $dataset . '@' . $snapshot_name, LOG_LEVEL::ERROR);
+        }
+    }
+}
+
 function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime): void
 {
     if (count($snapshots_to_restic) === 0) {
@@ -394,7 +403,9 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         $cmd .= ' --force';
     }
     $cmd .= ' /data';
-    if (!system_command($cmd)) {
+    $ret = system_command($cmd);
+    unmount_snapshots($snapshots_to_restic);
+    if (!$ret) {
         logger('Cannot send snapshots to restic', LOG_LEVEL::ERROR);
         return;
     }
