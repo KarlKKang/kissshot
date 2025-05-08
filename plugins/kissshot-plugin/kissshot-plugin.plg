@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.07">
-<!ENTITY md5       "1b72717ac48977c13ff3cb1dd99bb55d">
+<!ENTITY version   "2025.05.08">
+<!ENTITY md5       "013e1a91cc81596b359594eaed038ccd">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.08
+- Fix a race condition in array lock handling.
+
 ###2025.05.07
 - Unmount ZFS snapshots after sending to restic.
 - Execute zfs-init on `starting` event.

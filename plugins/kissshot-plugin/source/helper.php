@@ -175,6 +175,9 @@ class ArrayLock
         if (flock($this->fp, LOCK_SH | LOCK_NB) === false) {
             throw new ArrayLockException();
         }
+        if (!is_file(self::LOCK_FILE)) {
+            throw new ArrayLockException();
+        }
     }
 
     public function release(): void
