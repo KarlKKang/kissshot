@@ -11,4 +11,4 @@ mkdir -p ./usr
 docker run -it --rm --name squashfs-tools -v "$PWD":/data squashfs-tools \
     unsquashfs -d /data/usr /data/$BZFILE
 
-echo "All files unpacked successfully."
+echo "bzfirmware: unpacked successfully"

@@ -16,4 +16,4 @@ mkdir -p ./lib
 docker run -it --rm --name squashfs-tools -v "$PWD":/data squashfs-tools \
     unsquashfs -d /data/lib /data/$BZFILE
 
-echo "All files unpacked successfully."
+echo "kernel: unpacked successfully"

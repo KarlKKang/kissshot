@@ -5,4 +5,4 @@ cd "$(dirname "$0")"
 
 cat ../src/rc.S >./root/etc/rc.d/rc.S
 
-echo "All files patched successfully."
+echo "bzroot: patches applied successfully"

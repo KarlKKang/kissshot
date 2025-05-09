@@ -12,4 +12,4 @@ mkdir -p ./root
 cd ./root
 dd if=../$BZFILE bs=512 "skip=$(cpio -ivt -H newc <../$BZFILE 2>&1 >/dev/null | awk '{print $1}')" | xzcat | cpio -i -d -H newc --no-absolute-filenames
 
-echo "All files unpacked successfully."
+echo "bzroot: unpacked successfully"

@@ -7,4 +7,4 @@ rm -f ./bzfirmware
 rm -f ./bzfirmware.sha256
 rm -rf ./usr
 
-echo "Clean up completed."
+echo "bzfirmware: cleanup completed"

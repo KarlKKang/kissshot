@@ -9,4 +9,4 @@ cd ..
 cat ./microcode ./bzroot.part >./bzroot
 sha256sum ./bzroot | awk '{print $1}' >./bzroot.sha256
 
-echo "All files packed successfully."
+echo "bzroot: files packed successfully"

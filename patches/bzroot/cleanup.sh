@@ -9,4 +9,4 @@ rm -f ./bzroot.sha256
 rm -f ./bzroot.part
 rm -rf ./root
 
-echo "Clean up completed."
+echo "bzroot: cleanup completed"

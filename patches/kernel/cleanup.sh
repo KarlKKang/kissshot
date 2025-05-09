@@ -9,4 +9,4 @@ rm -f ./bzimage
 rm -f ./bzimage.sha256
 rm -rf ./lib
 
-echo "Clean up completed."
+echo "kernel: cleanup completed"

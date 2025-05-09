@@ -17,4 +17,4 @@ mv "/boot/$1.sha256" "/boot/backup/$1.sha256"
 mv "$2" "/boot/$1"
 mv "$2.sha256" "/boot/$1.sha256"
 
-echo "All files deployed successfully."
+echo "$1: deployed successfully"

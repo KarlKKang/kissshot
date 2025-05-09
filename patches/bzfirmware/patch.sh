@@ -22,4 +22,4 @@ cat $SRC_DIR/rc.runlog >./usr/local/etc/rc.d/rc.runlog
 cat $SRC_DIR/flash_backup >./usr/local/emhttp/plugins/dynamix/scripts/flash_backup
 cat $SRC_DIR/.config >"$CONFIG_DIR/.config"
 
-echo "All files patched successfully."
+echo "bzfirmware: patches applied successfully"

@@ -31,4 +31,4 @@ echo "Diff in auto-generated config file:"
 diff ../src/.config "../bzfirmware/usr/src/linux-${FULL_VER}-Unraid/.config" || true
 read -rp "Press enter to continue"
 
-echo "All files patched successfully."
+echo "kernel: patches applied successfully"
