@@ -3,7 +3,7 @@
   <name>TSUKIHI</name>
   <uuid>3bd0e4d7-ada4-bf51-2c50-ef4813aa688c</uuid>
   <metadata>
-    <vmtemplate xmlns="http://unraid" name="Windows 11" icon="windows11.png" os="windowstpm" webui="" storage="default" iconold="windows11.png"/>
+    <vmtemplate xmlns="unraid" name="Windows 11" icon="windows11.png" os="windowstpm" webui="" storage="default" iconold="windows11.png"/>
   </metadata>
   <memory unit='KiB'>50331648</memory>
   <currentMemory unit='KiB'>50331648</currentMemory>
@@ -126,10 +126,6 @@
       <boot order='1'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
     </disk>
-    <controller type='pci' index='0' model='pci-root'/>
-    <controller type='virtio-serial' index='0'>
-      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
-    </controller>
     <controller type='usb' index='0' model='ich9-ehci1'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x7'/>
     </controller>
@@ -144,6 +140,10 @@
     <controller type='usb' index='0' model='ich9-uhci3'>
       <master startport='4'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x2'/>
+    </controller>
+    <controller type='pci' index='0' model='pci-root'/>
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0'/>
     </controller>
     <interface type='bridge'>
       <mac address='52:54:00:60:3c:08'/>
@@ -218,13 +218,6 @@
         <address domain='0x0000' bus='0x47' slot='0x00' function='0x3'/>
       </source>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x0e' function='0x0'/>
-    </hostdev>
-    <hostdev mode='subsystem' type='usb' managed='no'>
-      <source>
-        <vendor id='0x8087'/>
-        <product id='0x0025'/>
-      </source>
-      <address type='usb' bus='0' port='1'/>
     </hostdev>
     <memballoon model='none'/>
   </devices>
