@@ -3,8 +3,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-const NOTIFICATION_TITLE = 'ZFS Auto Snapshot';
-
 require __DIR__ . '/helper.php';
 
 $default_retention_policy = [

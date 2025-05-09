@@ -3,8 +3,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-const NOTIFICATION_TITLE = 'Health Check';
-
 require __DIR__ . '/helper.php';
 
 const RUNTIME_DIR = '/mnt/user/system/health-check';

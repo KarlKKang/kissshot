@@ -1,15 +1,6 @@
 #!/bin/bash
 
-php "/usr/local/emhttp/plugins/kissshot-plugin/recycle-clean.php"
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-    logger -t recycle-clean "[error] Script exited with error code $exit_code"
-    /usr/local/emhttp/webGui/scripts/notify -e "Recycle Clean" -d "Script exited with error code $exit_code" -i "alert"
-fi
+PHP_RUN="/usr/local/emhttp/plugins/kissshot-plugin/run_php.sh"
 
-php "/usr/local/emhttp/plugins/kissshot-plugin/trim.php"
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-    logger -t trim "[error] Script exited with error code $exit_code"
-    /usr/local/emhttp/webGui/scripts/notify -e "TRIM" -d "Script exited with error code $exit_code" -i "alert"
-fi
+SCRIPT_NAME="recycle-clean" NOTIFICATION_TITLE="Recycle Clean" $PHP_RUN
+SCRIPT_NAME="trim" NOTIFICATION_TITLE="TRIM" $PHP_RUN

@@ -1,15 +1,6 @@
 #!/bin/bash
 
-php "/usr/local/emhttp/plugins/kissshot-plugin/zfs-auto-snapshot.php"
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-    logger -t zfs-auto-snapshot "[error] Script exited with error code $exit_code"
-    /usr/local/emhttp/webGui/scripts/notify -e "ZFS Auto Snapshot" -d "Script exited with error code $exit_code" -i "alert"
-fi
+PHP_RUN="/usr/local/emhttp/plugins/kissshot-plugin/run_php.sh"
 
-php "/usr/local/emhttp/plugins/kissshot-plugin/health-check.php"
-exit_code=$?
-if [ $exit_code -ne 0 ]; then
-    logger -t health-check "[error] Script exited with error code $exit_code"
-    /usr/local/emhttp/webGui/scripts/notify -e "Health Check" -d "Script exited with error code $exit_code" -i "alert"
-fi
+SCRIPT_NAME="zfs-auto-snapshot" NOTIFICATION_TITLE="ZFS Auto Snapshot" $PHP_RUN
+SCRIPT_NAME="health-check" NOTIFICATION_TITLE="Health Check" $PHP_RUN

@@ -28,8 +28,12 @@ function get_script_name(): string
 function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 {
     if ($level !== LOG_LEVEL::INFO) {
+        $notification_title = getenv('NOTIFICATION_TITLE');
+        if (!is_string($notification_title) || empty($notification_title)) {
+            $notification_title = 'kissshot-plugin';
+        }
         try {
-            exec('/usr/local/emhttp/webGui/scripts/notify -e ' . escapeshellarg(NOTIFICATION_TITLE) .  ' -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
+            exec('/usr/local/emhttp/webGui/scripts/notify -e ' . escapeshellarg($notification_title) .  ' -d ' . escapeshellarg($message) . ' -i ' . $level->unraid_level());
         } catch (ValueError $e) {
             echo 'Cannot send notification: ' . $e->getMessage() . PHP_EOL;
         }
