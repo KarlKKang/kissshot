@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export MAJOR_VER="6"
-export FULL_VER="6.6.78"
-export ZFS_VER="2.2.7"
+export FULL_VER="6.12.24"
+export ZFS_VER="2.3.1"
 
 set -e
 

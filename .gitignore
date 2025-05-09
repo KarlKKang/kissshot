@@ -15,3 +15,5 @@
 /patches/kernel/bzimage
 /patches/kernel/bzimage.sha256
 /patches/kernel/lib
+/patches/kernel/old_modules.txt
+/patches/kernel/new_modules.txt
