@@ -3,7 +3,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-const SCRIPT_NAME = 'zfs-init';
 const NOTIFICATION_TITLE = 'ZFS Initialization';
 
 require __DIR__ . '/helper.php';

@@ -16,6 +16,15 @@ enum LOG_LEVEL: string
     }
 }
 
+function get_script_name(): string
+{
+    $script_name = basename($_SERVER['SCRIPT_FILENAME'] ?? '', '.php');
+    if (empty($script_name)) {
+        $script_name = 'kissshot-plugin';
+    }
+    return $script_name;
+}
+
 function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 {
     if ($level !== LOG_LEVEL::INFO) {
@@ -27,7 +36,7 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
     }
     $message = '[' . $level->value . '] ' . $message;
     try {
-        exec('logger -t ' . escapeshellarg(SCRIPT_NAME) . ' ' . escapeshellarg($message));
+        exec('logger -t ' . escapeshellarg(get_script_name()) . ' ' . escapeshellarg($message));
     } catch (ValueError $e) {
         echo 'Cannot log message: ' . $e->getMessage() . PHP_EOL;
     }

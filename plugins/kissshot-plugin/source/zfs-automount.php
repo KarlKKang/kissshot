@@ -3,7 +3,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-const SCRIPT_NAME = 'zfs-automount';
 const NOTIFICATION_TITLE = 'ZFS Automount';
 
 require __DIR__ . '/helper.php';
