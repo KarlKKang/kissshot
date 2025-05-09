@@ -102,7 +102,7 @@
   <devices>
     <emulator>/usr/local/sbin/qemu</emulator>
     <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='1' queues='2'/>
+      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='1'/>
       <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_d'/>
       <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
       <target dev='hdc' bus='virtio'/>
@@ -110,7 +110,7 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x04' function='0x0'/>
     </disk>
     <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='2' queues='2'/>
+      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='2'/>
       <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_e'/>
       <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
       <target dev='hdd' bus='virtio'/>
@@ -118,7 +118,7 @@
       <address type='pci' domain='0x0000' bus='0x00' slot='0x05' function='0x0'/>
     </disk>
     <disk type='block' device='disk'>
-      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='3' queues='2'/>
+      <driver name='qemu' type='raw' cache='writeback' io='io_uring' discard='unmap' iothread='3'/>
       <source dev='/dev/zvol/kokorowatari/domains/TSUKIHI/vdisk_c'/>
       <blockio logical_block_size='512' physical_block_size='16384' discard_granularity='33554432'/>
       <target dev='hde' bus='virtio'/>
