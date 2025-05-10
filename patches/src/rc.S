@@ -143,7 +143,7 @@ bzmount(){
   local BZFILE=$1
   local MNTDIR=$2
   local LOOP_DEV
-  LOOP_DEV=$(/sbin/losetup -v --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
+  LOOP_DEV=$(/sbin/losetup --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
   /sbin/mount -v -r -t squashfs "$LOOP_DEV" /$MNTDIR || abort "cannot mount $BZFILE"
   # setup an overlayfs
   /bin/mkdir -p /var/local/overlay/$MNTDIR
