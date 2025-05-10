@@ -5,9 +5,7 @@ ini_set('display_errors', 1);
 
 require __DIR__ . '/helper.php';
 
-$zvol_mounts = [
-    'kokorowatari/system/docker' => '/mnt/kokorowatari/system/docker',
-];
+$zvol_mounts = [];
 
 function get_encrypted_datasets(): array|false
 {

@@ -5,9 +5,7 @@ ini_set('display_errors', 1);
 
 require __DIR__ . '/helper.php';
 
-$fstrim_mounts = [
-    '/mnt/kokorowatari/system/docker',
-];
+$fstrim_mounts = [];
 $zpools = [
     'kokorowatari',
 ];
