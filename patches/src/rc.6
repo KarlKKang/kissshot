@@ -262,6 +262,7 @@ fi
 log "Remounting /boot read-only:"
 if /bin/mountpoint -q /boot/config; then
   run /bin/umount -v /boot/config
+  run /sbin/losetup -v -d /dev/loop0
   run /bin/mount -v -o remount,ro /boot
   run /bin/mount -v -t btrfs -o auto,ro,noatime,nodiratime,nodiscard /boot/config.img /boot/config
 else

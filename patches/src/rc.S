@@ -112,7 +112,8 @@ else
   fi
   /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed $DEVICE /boot || abort "cannot mount $DEVICE"
   if [ -f /boot/config.img ]; then
-    /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,nodiscard /boot/config.img /boot/config || abort "cannot mount /boot/config.img"
+    /sbin/losetup -v --direct-io=on /dev/loop0 /boot/config.img || abort "cannot setup loop device for /boot/config.img"
+    /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,nodiscard /dev/loop0 /boot/config || abort "cannot mount /boot/config.img"
   fi
 fi
 
@@ -142,7 +143,7 @@ bzmount(){
   local BZFILE=$1
   local MNTDIR=$2
   local LOOP_DEV
-  LOOP_DEV=$(losetup --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
+  LOOP_DEV=$(/sbin/losetup -v --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
   /sbin/mount -v -r -t squashfs "$LOOP_DEV" /$MNTDIR || abort "cannot mount $BZFILE"
   # setup an overlayfs
   /bin/mkdir -p /var/local/overlay/$MNTDIR
