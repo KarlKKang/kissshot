@@ -147,7 +147,7 @@ bzmount(){
   # setup an overlayfs
   /bin/mkdir -p /var/local/overlay/$MNTDIR
   /bin/mkdir -p /var/local/overlay-work/$MNTDIR
-  /sbin/mount -v -t overlay overlay -o lowerdir=/$MNTDIR,upperdir=/var/local/overlay/$MNTDIR,workdir=/var/local/overlay-work/$MNTDIR /$MNTDIR
+  /sbin/mount -v -t overlay overlay -o lowerdir=/$MNTDIR,upperdir=/var/local/overlay/$MNTDIR,workdir=/var/local/overlay-work/$MNTDIR /$MNTDIR || abort "cannot mount overlayfs for $BZFILE"
 }
 
 if [[ $UNRAIDROOT == "" ]]; then
