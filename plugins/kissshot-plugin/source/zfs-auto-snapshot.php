@@ -257,11 +257,13 @@ function fs_thaw(string $domain): void
     }
 }
 
-function fs_trim(string $domain): void
+function fs_trim(string $domain): bool
 {
-    if (!system_command('virsh domfstrim ' . escapeshellarg($domain))) {
+    $result = system_command('virsh domfstrim ' . escapeshellarg($domain));
+    if (!$result) {
         logger('Cannot trim filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
     }
+    return $result;
 }
 
 function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_restic): void
