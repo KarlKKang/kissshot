@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.10">
-<!ENTITY md5       "2f5100d236eb63c3ea059e51cc231979">
+<!ENTITY md5       "554191418c488085b996dc83bfee21fa">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,7 @@
 <CHANGES>
 ###2025.05.10
 - Remove the docker ZVOL.
+- Fix snapshots not taken when the VM is running.
 
 ###2025.05.09
 - Refactor to reduce code duplication.
