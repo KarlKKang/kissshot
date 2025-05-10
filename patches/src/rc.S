@@ -139,10 +139,11 @@ bzcheck(){
 }
 
 bzmount(){
-  local BZDIR=$1
-  local BZFILE=$2
-  local MNTDIR=$3
-  /sbin/mount -v -r -t squashfs /$BZDIR/$BZFILE /$MNTDIR || abort "cannot mount /$BZDIR/$BZFILE"
+  local BZFILE=$1
+  local MNTDIR=$2
+  local LOOP_DEV
+  LOOP_DEV=$(losetup --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
+  /sbin/mount -v -r -t squashfs "$LOOP_DEV" /$MNTDIR || abort "cannot mount $BZFILE"
   # setup an overlayfs
   /bin/mkdir -p /var/local/overlay/$MNTDIR
   /bin/mkdir -p /var/local/overlay-work/$MNTDIR
@@ -159,8 +160,8 @@ if [[ $UNRAIDROOT == "" ]]; then
   bzcheck_custom "bzfirmware" "/usr/bzfirmware"
   bzcheck_custom "bzmodules" "/lib/bzmodules"
 
-  bzmount "usr" "bzfirmware" "usr"
-  bzmount "lib" "bzmodules" "lib"
+  bzmount "/usr/bzfirmware" "usr"
+  bzmount "/lib/bzmodules" "lib"
 
   # now that /usr is mounted make /etc/rc.d a symlink
   /bin/rm -rf /etc/rc.d
