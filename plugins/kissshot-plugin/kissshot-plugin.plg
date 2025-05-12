@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.10">
-<!ENTITY md5       "554191418c488085b996dc83bfee21fa">
+<!ENTITY version   "2025.05.11">
+<!ENTITY md5       "ff94704a523e37cd965b100437dd3865">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.11
+- Destroy the snapshots if the VM failed to thaw, as the snapshots are likely not in a consistent state.
+
 ###2025.05.10
 - Remove the docker ZVOL.
 - Fix snapshots not taken when the VM is running.

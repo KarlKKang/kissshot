@@ -250,11 +250,13 @@ function fs_freeze(string $domain): bool
     return $result;
 }
 
-function fs_thaw(string $domain): void
+function fs_thaw(string $domain): bool
 {
-    if (!system_command('virsh domfsthaw ' . escapeshellarg($domain))) {
+    $result = system_command('virsh domfsthaw ' . escapeshellarg($domain));
+    if (!$result) {
         logger('Cannot thaw filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
     }
+    return $result;
 }
 
 function fs_trim(string $domain): bool
@@ -280,7 +282,7 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
 
     $create_cmd = 'zfs snapshot';
     $cleanup_args = [];
-    $txg_snapshots_to_restic = [];
+    $txg_snapshots = [];
     foreach ($datasets as $dataset => $dataset_config) {
         if (!is_string($dataset) || !is_array($dataset_config)) {
             logger('Invalid dataset configuration: ' . json_encode([$dataset => $dataset_config]), LOG_LEVEL::ERROR);
@@ -299,12 +301,12 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
         while (array_key_exists($new_snapshot_name, $existing_snapshots)) {
             $new_snapshot_name = generate_random_string(8);
         }
-        $new_snapshot_name = SNAPSHOT_PREFIX . $new_snapshot_name;
-        $create_cmd .= ' ' . escapeshellarg($dataset . '@' . $new_snapshot_name);
+        $create_cmd .= ' ' . escapeshellarg($dataset . '@' . SNAPSHOT_PREFIX . $new_snapshot_name);
         $cleanup_args[] = [$dataset, $existing_snapshots, $retention_policy];
-        if ($dataset_config['send_to_restic'] ?? false) {
-            $txg_snapshots_to_restic[$dataset] = $new_snapshot_name;
-        }
+        $txg_snapshots[$dataset] = [
+            'name' => $new_snapshot_name,
+            'send_to_restic' => $dataset_config['send_to_restic'] ?? false,
+        ];
     }
 
     $domain = $txg['domain']['name'] ?? null;
@@ -356,11 +358,18 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
     }
 
     $create_success = system_command($create_cmd);
+    $invalid_txg = false;
     if ($domain_is_running) {
-        fs_thaw($domain);
+        $invalid_txg = !fs_thaw($domain);
     }
     if (!$create_success) {
         logger('Error encountered during snapshot creation', LOG_LEVEL::ERROR);
+        return;
+    }
+    if ($invalid_txg) {
+        foreach ($txg_snapshots as $dataset => $snapshot) {
+            destroy_snapshot($dataset, $snapshot['name']);
+        }
         return;
     }
 
@@ -368,13 +377,17 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
         cleanup_snapshots(...$cleanup_arg);
     }
 
-    $snapshots_to_restic = array_merge($snapshots_to_restic, $txg_snapshots_to_restic);
+    foreach ($txg_snapshots as $dataset => $snapshot) {
+        if ($snapshot['send_to_restic']) {
+            $snapshots_to_restic[$dataset] = $snapshot['name'];
+        }
+    }
 }
 
 function unmount_snapshots(array $snapshots): void
 {
     foreach ($snapshots as $dataset => $snapshot_name) {
-        if (!system_command('umount ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name))) {
+        if (!system_command('umount ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name))) {
             logger('Cannot unmount snapshot ' . $dataset . '@' . $snapshot_name, LOG_LEVEL::ERROR);
         }
     }
@@ -393,7 +406,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         ' --memory 1g --memory-swap -1';
     $cmd = $cmd_docker_prefix;
     foreach ($snapshots_to_restic as $dataset => $snapshot_name) {
-        $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
+        $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
     }
     $cmd .= ' restic/restic backup -q';
     $last_force_run = $runtime->state['force_run'] ?? null;
