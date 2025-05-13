@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.11">
-<!ENTITY md5       "ff94704a523e37cd965b100437dd3865">
+<!ENTITY version   "2025.05.13">
+<!ENTITY md5       "0399fc4dbe24afc4cf01f763b1b6d1f5">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.13
+- Add a microcode check when installing the plugin.
+
 ###2025.05.11
 - Destroy the snapshots if the VM failed to thaw, as the snapshots are likely not in a consistent state.
 
@@ -143,6 +146,7 @@ echo " Copyright 2025, &author;"
 echo " Version: &version;"
 echo "-----------------------------------------------------------"
 echo ""
+SCRIPT_NAME="microcode-check" NOTIFICATION_TITLE="Microcode Check" /usr/local/emhttp/plugins/&name;/run_php.sh 2&gt;&amp;1
 </INLINE>
 </FILE>
 
