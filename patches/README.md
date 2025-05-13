@@ -30,13 +30,13 @@ This patch modifies the boot process to verify `bzfirmware` and `bzmodules` afte
   - The second section is the root filesystem, compressed with XZ, with CRC32 checksums. The kernel should raise an error if the checksums do not match as it decompresses the file.
 - The `bzimage` file also contains a compressed and an uncompressed section:
   - The first uncompressed section is a small stub that does some basic hardware initialization and decompresses the second section. There's basically no way to verify the integrity of this section, but any failure in this stage should be catastrophic, like a hardware failure. This is the same reason why we don't bother with the bootloader itself.
-  - The second section is the compressed kernel image. By default, Unraid ships it with LZMA compression. LZMA is not checksummed. Therefore, this patch recompiles the kernel with XZ compression, which is checksummed with CRC32. The kernel should raise an error if there's a checksum mismatch. While we are at it, I also enabled `CONFIG_NO_HZ_FULL`, which could potentially improve performance for some applications running on isolated CPUs when `nohz_full` boot parameter is set accordingly.
+  - The second section is the compressed kernel image. By default, Unraid ships it with LZMA compression. LZMA is not checksummed. Therefore, this patch recompiles the kernel with XZ compression, which is checksummed with CRC32. The kernel should raise an error if there's a checksum mismatch.
 
 ### Alternative Solutions
 
-The [Unraid WebGUI repository](https://github.com/unraid/webgui) recently added support for the GRUB bootloader and boot partition formatted as XFS and Btrfs. This will probably take a while to be an official feature. But even if it does, the above problem is not solved. Btrfs is a checksummed filesystem, but GRUB's implementation is minimal and does not actually verify the checksums.
+The [Unraid WebGUI repository](https://github.com/unraid/webgui) recently added support for the GRUB bootloader and boot partition formatted as XFS and Btrfs. This will probably take a while to become an official feature. But even if it does, the above problem is not entirely solved. Btrfs is a checksummed filesystem, but GRUB's implementation is minimal and does not actually verify the checksums during boot. So the integrity check on the `bz*` files is no better than the above solution. Though using Btrfs for the boot drive will eliminate the need to put the `config` folder in a separate image.
 
-It seems that the only way to get a checksummed boot partition is with GRUB and ZFS. However, I quote from the [official Arch Linux wiki](https://wiki.archlinux.org/title/Install_Arch_Linux_on_ZFS): 
+It seems that the only way to get a fully checksummed boot partition is with GRUB and ZFS. However, I quote from the [official Arch Linux wiki](https://wiki.archlinux.org/title/Install_Arch_Linux_on_ZFS): 
 
 > Grub2's ZFS implementation, which is entirely independent of the OpenZFS implementation, is not known for reliability.
 
@@ -44,7 +44,7 @@ Therefore, I think the above solution has already achieved a decent level of int
 
 ## Applying Patches
 
-To apply the patches, just run the `tools/run_all.sh` script on the Unraid system to be patched. The `kernel-compiler` and `squashfs-tools` docker images and the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old files are kept in the `backup` folder on the flash drive.
+To apply the patches, just run the `tools/run_all.sh` script on the Unraid system to be patched. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old files are kept in the `backup` folder on the flash drive.
 
 To move the config folder to a Btrfs image, run `tools/build_config_img.sh` on the Unraid system. The original config folder will be moved to `config.old`, which can be deleted after verifying that the new config image works.
 
