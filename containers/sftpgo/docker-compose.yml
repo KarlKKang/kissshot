@@ -1,0 +1,17 @@
+services:
+  sftpgo:
+    container_name: sftpgo
+    image: drakkan/sftpgo:latest
+    volumes:
+      - /mnt/user/appdata/sftpgo/data:/srv/sftpgo
+      - /mnt/user/appdata/sftpgo/home:/var/lib/sftpgo
+      - /mnt/user/media:/data/media:ro
+    ports:
+      - 8080:8080
+      - 2022:2022
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    memswap_limit: -1
