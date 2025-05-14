@@ -1,0 +1,19 @@
+# Used as a backup destination for Synology Hyper Backup
+
+services:
+  kjhybb-nas-rsync-server:
+    container_name: kjhybb-nas-rsync-server
+    image: rsync-server # Source: https://github.com/KarlKKang/rsync-server
+    environment:
+      PASSWORD_FILE: '/config/password'
+    volumes:
+      - /mnt/user/kjhybb-nas:/data
+      - /mnt/user/appdata/kjhybb-nas-rsync-server:/config:ro
+    ports:
+      - 8022:22
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    memswap_limit: -1
