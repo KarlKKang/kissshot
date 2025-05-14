@@ -96,7 +96,7 @@ $config = [
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const SNAPSHOT_PREFIX = 'zfs-auto-snap_';
-const RUNTIME_DIR = '/mnt/user/system/zfs-auto-snapshot';
+const RUNTIME_DIR = '/mnt/user/system/zfs-backup';
 const RUNTIME_FILE = 'runtime.json';
 const RESTIC_RUNTIME_FILE = 'restic_runtime.json';
 
