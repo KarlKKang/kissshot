@@ -78,7 +78,7 @@ function main(): void
     $arc_max = intval(max($memory_all_bytes * 5 / 8, $memory_all_bytes - 1024 * 1024 * 1024));
     $arc_max -= ARC_RESERVE_BYTES;
     if ($arc_max < $arc_min || $arc_max < 67108864) {
-        logger('arc_max too low: ' . $arc_max, LOG_LEVEL::ERROR);
+        logger('New arc_max too low, not applying the change: ' . $arc_max, LOG_LEVEL::ERROR);
         return;
     }
     set_arc_max($arc_max);

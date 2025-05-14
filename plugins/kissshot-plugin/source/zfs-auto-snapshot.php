@@ -262,8 +262,10 @@ function fs_thaw(string $domain): bool
 function fs_trim(string $domain): bool
 {
     $result = system_command('virsh domfstrim ' . escapeshellarg($domain));
-    if (!$result) {
-        logger('Cannot trim filesystem for domain ' . $domain, LOG_LEVEL::ERROR);
+    if ($result) {
+        logger('Trimmed filesystems for domain: ' . $domain);
+    } else {
+        logger('Cannot trim filesystems for domain: ' . $domain, LOG_LEVEL::ERROR);
     }
     return $result;
 }
@@ -370,6 +372,7 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
         foreach ($txg_snapshots as $dataset => $snapshot) {
             destroy_snapshot($dataset, $snapshot['name']);
         }
+        logger('Invalid snapshots destroyed for datasets: ' . implode(', ', array_keys($txg_snapshots)));
         return;
     }
 
@@ -382,6 +385,8 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
             $snapshots_to_restic[$dataset] = $snapshot['name'];
         }
     }
+
+    logger('Snapshots created for datasets: ' . implode(', ', array_keys($txg_snapshots)));
 }
 
 function unmount_snapshots(array $snapshots): void
@@ -413,6 +418,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     $current_month = date('Y-m');
     if ($last_force_run !== $current_month) {
         $cmd .= ' --force';
+        logger('Sending snapshots to restic with a force rescan');
     }
     $cmd .= ' /data';
     $ret = system_command($cmd);
@@ -421,8 +427,9 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         logger('Cannot send snapshots to restic', LOG_LEVEL::ERROR);
         return;
     }
-
     $runtime->state['force_run'] = $current_month;
+    logger('Snapshots sent to restic for datasets: ' . implode(', ', array_keys($snapshots_to_restic)));
+
     $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 1d --keep-within-hourly 3d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --prune';
     if (!system_command($cmd)) {
         logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
@@ -441,11 +448,15 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     if (!is_int($check_subset_denominator) || $check_subset_denominator < 1) {
         $check_subset_denominator = 4;
     }
+    $check_subset_numerator = $check_subset_numerator % $check_subset_denominator + 1;
     $runtime->state['check'] = $current_week;
-    $runtime->state['check_subset_numerator'] = ($check_subset_numerator + 1) % $check_subset_denominator;
+    $runtime->state['check_subset_numerator'] = $check_subset_numerator;
     $runtime->state['check_subset_denominator'] = $check_subset_denominator;
-    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . ($check_subset_numerator % $check_subset_denominator + 1) . '/' . $check_subset_denominator;
-    if (!system_command($cmd)) {
+    $subset = $check_subset_numerator . '/' . $check_subset_denominator;
+    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . $subset;
+    if (system_command($cmd)) {
+        logger('Restic repository check completed successfully for subset ' . $subset);
+    } else {
         logger('Error during restic check', LOG_LEVEL::ERROR);
     }
 }
