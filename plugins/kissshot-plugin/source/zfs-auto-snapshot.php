@@ -399,7 +399,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
 
-    $cmd_docker_prefix = 'docker run -i --rm --name restic --hostname KISSSHOT' .
+    $cmd_docker_prefix = 'docker run -i --rm --name restic --hostname KISSSHOT --network host' .
         ' -v /mnt/user/appdata/restic:/config:ro -v restic-cache:/cache' .
         ' -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key' .
         ' -e RESTIC_PASSWORD_FILE=/config/repository.key -e RESTIC_CACHE_DIR=/cache' .

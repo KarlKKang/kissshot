@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.13">
-<!ENTITY md5       "0399fc4dbe24afc4cf01f763b1b6d1f5">
+<!ENTITY version   "2025.05.14">
+<!ENTITY md5       "60c02fc7e1ce2a3eae3d55635e3f083c">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.14
+- Use host network for restic.
+
 ###2025.05.13
 - Add a microcode check when installing the plugin.
 
