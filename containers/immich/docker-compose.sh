@@ -3,7 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 
-docker run --rm -it \
+docker run -it --rm --name docker-compose --network none \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /mnt/user/appdata/immich:/mnt/user/appdata/immich:ro \
     -v "$PWD:$PWD:ro" \
