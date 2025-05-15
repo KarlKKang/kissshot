@@ -76,8 +76,11 @@ done
 # LimeTech - poll for device with $UNRAIDLABEL present, with 30-sec timeout
 # this serves to synchronize this script with USB subsystem
 abort() {
+  /bin/echo "$1"
+  /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
+  /bin/bash
   /bin/umount -a
-  read -p "$1 - press ENTER key to reboot..."
+  read -p "Press ENTER key to reboot..."
   /bin/echo
   /sbin/reboot -fd
 }
