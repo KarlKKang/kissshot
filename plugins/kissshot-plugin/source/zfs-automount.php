@@ -7,9 +7,10 @@ require __DIR__ . '/helper.php';
 
 $zvol_mounts = [];
 
-function get_encrypted_datasets(): array|false
+function get_datasets(): array|false
 {
-    $datasets = [];
+    $root_datasets = [];
+    $encrypted_datasets = [];
     $output = [];
     // Not tested: sorting by mountpoint allows mounting of parent datasets before children, so that children
     //  can have their own encryption root.
@@ -24,15 +25,30 @@ function get_encrypted_datasets(): array|false
             return false;
         }
         [$name, $keylocation, $mountpoint] = $line;
+        if (strpos($name, '/') === false && $keylocation === 'none') {
+            $root_datasets[$name] = $mountpoint;
+            continue;
+        }
         if ($keylocation === 'prompt' || $keylocation === 'none') {
             continue;
         }
         if ($mountpoint === '-') {
             $mountpoint = null;
         }
-        $datasets[$name] = $mountpoint;
+        $encrypted_datasets[$name] = $mountpoint;
     }
-    return $datasets;
+    return [$root_datasets, $encrypted_datasets];
+}
+
+function remount_noatime(string $mountpoint): void
+{
+    # Unraid mounts root datasets with `-o atime=off`, but this leads to `relatime` in `/proc/mounts`.
+    # We will remount the root datasets with `noatime` for the correct behavior.
+    if (system_command('mount -o remount,noatime ' . escapeshellarg($mountpoint))) {
+        logger('Remounted with noatime: ' . $mountpoint);
+    } else {
+        logger('Cannot remount with noatime: ' . $mountpoint, LOG_LEVEL::ERROR);
+    }
 }
 
 function create_mountpoint(string $mountpoint): bool
@@ -178,11 +194,15 @@ function main(array $argv, array $zvol_mounts): void
     }
     $action = $argv[1];
     if ($action === 'mount') {
-        $datasets = get_encrypted_datasets();
+        $datasets = get_datasets();
         if ($datasets === false) {
             return;
         }
-        foreach ($datasets as $dataset => $mountpoint) {
+        [$root_datasets, $encrypted_datasets] = $datasets;
+        foreach ($root_datasets as $mountpoint) {
+            remount_noatime($mountpoint);
+        }
+        foreach ($encrypted_datasets as $dataset => $mountpoint) {
             mount($dataset, $mountpoint);
         }
         foreach ($zvol_mounts as $dataset => $mountpoint) {

@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.14">
-<!ENTITY md5       "1f343f48c228776a2d78447eff5b38f6">
+<!ENTITY version   "2025.05.15">
+<!ENTITY md5       "6bc2caa87c0c8709ce9cfc7c598a649b">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.15
+- Remount root ZFS datasets with `noatime` correctly set.
+
 ###2025.05.14
 - Use host network for restic.
 - Improve logging.
