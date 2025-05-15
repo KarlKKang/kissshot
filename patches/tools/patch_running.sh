@@ -4,6 +4,10 @@ set -e
 cd "$(dirname "$0")"
 
 SRC_DIR="../src"
+DRY_RUN=false
+if [[ "$1" == "--dry-run" ]]; then
+    DRY_RUN=true
+fi
 
 apply_patch() {
     local name="$1"
@@ -12,8 +16,13 @@ apply_patch() {
     if cmp --silent "$SRC_DIR/$name" "$dest"; then
         echo "No changes to $name."
     else
-        echo "Patching $name..."
-        cat "$SRC_DIR/$name" >"$dest"
+        if [ "$DRY_RUN" = true ]; then
+            echo "Changes detected in $name. Would apply the following changes:"
+            diff -u "$SRC_DIR/$name" "$dest" || true
+        else
+            echo "Patching $name..."
+            cat "$SRC_DIR/$name" >"$dest"
+        fi
     fi
 }
 
