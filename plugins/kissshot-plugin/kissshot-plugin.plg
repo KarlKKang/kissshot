@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.15">
-<!ENTITY md5       "6bc2caa87c0c8709ce9cfc7c598a649b">
+<!ENTITY version   "2025.05.16">
+<!ENTITY md5       "aef1aab3b307a97570611d5f18cce7d9">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.16
+- Remove the interactive option of the restic docker run command.
+
 ###2025.05.15
 - Remount root ZFS datasets with `noatime` correctly set.
 
