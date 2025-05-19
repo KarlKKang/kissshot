@@ -18,17 +18,28 @@ cd "$(dirname "$0")"
 
 PARENT_DIR="$(realpath ..)"
 
+show_diff() {
+    local file1="$1"
+    local file2="$2"
+    if ! cmp --silent "$file1" "$file2"; then
+        echo "Differences found in $file1 and $file2:"
+        diff -u "$file1" "$file2" || true
+        read -rp "Continue? (y/n) " answer
+        if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+            exit 1
+        fi
+    fi
+}
+
 (find ./lib/modules -type f -print | sort) >./old_modules.txt
 
 docker run -it --rm --name kernel-compiler --network host -v kernel-compiler-keyring:/root/.gnupg -v "$PARENT_DIR/bzfirmware/usr/src/linux-${FULL_VER}-Unraid:/data/patches" -v "${PWD}:/data/output" \
     -e MAJOR_VER="$MAJOR_VER" -e FULL_VER="$FULL_VER" -e PATCH_DIR=/data/patches -e ZFS_VER="$ZFS_VER" -e OUT_DIR=/data/output kernel-compiler
 
 (find ./lib/modules -type f -print | sort) >./new_modules.txt
-diff ./old_modules.txt ./new_modules.txt
+show_diff ./old_modules.txt ./new_modules.txt
 rm -f ./old_modules.txt ./new_modules.txt
 
-echo "Diff in auto-generated config file:"
-diff ../src/.config "../bzfirmware/usr/src/linux-${FULL_VER}-Unraid/.config" || true
-read -rp "Press enter to continue"
+show_diff ../src/.config "../bzfirmware/usr/src/linux-${FULL_VER}-Unraid/.config"
 
 echo "kernel: patches applied successfully"
