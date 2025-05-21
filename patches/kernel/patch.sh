@@ -16,6 +16,11 @@ fi
 set -e
 cd "$(dirname "$0")"
 
+if [ ! -d ../bzfirmware/usr ]; then
+    echo "Please unpack bzfirmware first."
+    exit 1
+fi
+
 PARENT_DIR="$(realpath ..)"
 
 show_diff() {

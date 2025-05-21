@@ -87,16 +87,17 @@ abort() {
 
 find_device() {
   # find which USB flash device/partition has the indicated label
+  local LABEL=$1
   local i
   for i in {1..30}; do
-    DEVICE=$(/sbin/blkid -L $UNRAIDLABEL)
+    DEVICE=$(/sbin/blkid -L "$LABEL")
     [[ -z $DEVICE ]] && /bin/sleep 1 || return 0
   done
   return 1
 }
 
 /bin/echo -n "waiting up to 30 sec for device with label $UNRAIDLABEL to come online ... "
-find_device && /bin/echo "found $DEVICE" || abort "not found"
+find_device "$UNRAIDLABEL" && /bin/echo "found $DEVICE" || abort "not found"
 
 # detect filesystem from boot device
 if /sbin/blkid -s TYPE $DEVICE | /bin/grep -q "btrfs" ; then
@@ -114,16 +115,23 @@ else
     echo "$FSCK"
   fi
   /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed $DEVICE /boot || abort "cannot mount $DEVICE"
-  if [ -f /boot/config.img ]; then
-    /sbin/losetup -v --direct-io=on /dev/loop0 /boot/config.img || abort "cannot setup loop device for /boot/config.img"
-    /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,nodiscard /dev/loop0 /boot/config || abort "cannot mount /boot/config.img"
-  fi
 fi
 
+/sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev
+UNRAID_EXTRA_LABEL="UNRAID_EXTRA"
+/bin/echo -n "waiting up to 30 sec for device with label $UNRAID_EXTRA_LABEL to come online ... "
+find_device "$UNRAID_EXTRA_LABEL" && /bin/echo "found $DEVICE" || abort "not found"
+/sbin/btrfs device scan --all-devices || abort "cannot scan for BTRFS devices"
+/bin/mkdir -p /boot_extra
+/sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,degraded "$DEVICE" /boot_extra || abort "cannot mount $DEVICE"
+/bin/mkdir -p /boot/config
+/sbin/mount -v --bind /boot_extra/config /boot/config || abort "cannot bind mount /boot_extra/config to /boot/config"
+/bin/rm -rf /boot_extra/overlay
+
 # check initial files used to boot
-bzcheck_custom(){
+bzcheck(){
   local BZFILE=$1
-  local BZFILE_PATH=$2
+  local BZFILE_PATH="/boot/$1"
   if [[ -f /boot/config/skipbzcheck ]]; then
     /bin/echo "Skipping $BZFILE checksum verification"
     return
@@ -138,34 +146,26 @@ bzcheck_custom(){
   HASH2=$(/bin/cat "/boot/$BZFILECHK") || abort "Cannot read $BZFILECHK"
   [[ ${HASH1:0:64} != "${HASH2:0:64}" ]] && abort "$BZFILE checksum error"
 }
-bzcheck(){
-  bzcheck_custom "$1" "/boot/$1"
-}
 
 bzmount(){
-  local BZFILE=$1
-  local MNTDIR=$2
-  local LOOP_DEV
-  LOOP_DEV=$(/sbin/losetup --direct-io=on --show -r -f "$BZFILE") || abort "cannot setup loop device for $BZFILE"
-  /sbin/mount -v -r -t squashfs "$LOOP_DEV" /$MNTDIR || abort "cannot mount $BZFILE"
+  local MNTDIR=$1
   # setup an overlayfs
-  /bin/mkdir -p /var/local/overlay/$MNTDIR
-  /bin/mkdir -p /var/local/overlay-work/$MNTDIR
-  /sbin/mount -v -t overlay overlay -o lowerdir=/$MNTDIR,upperdir=/var/local/overlay/$MNTDIR,workdir=/var/local/overlay-work/$MNTDIR /$MNTDIR || abort "cannot mount overlayfs for $BZFILE"
+  /bin/mkdir -p "/boot_extra/overlay/upperdir/$MNTDIR"
+  /bin/mkdir -p "/boot_extra/overlay/workdir/$MNTDIR"
+  if [ -d "/boot_extra/deploy/$MNTDIR" ]; then
+    /bin/rm -rf "/boot_extra/$MNTDIR"
+    /bin/mv "/boot_extra/deploy/$MNTDIR" "/boot_extra"
+  fi
+  /sbin/mount -v -t overlay overlay -o "lowerdir=/boot_extra/$MNTDIR,upperdir=/boot_extra/overlay/upperdir/$MNTDIR,workdir=/boot_extra/overlay/workdir/$MNTDIR" "/$MNTDIR" || abort "cannot mount overlayfs for $MNTDIR"
 }
 
 if [[ $UNRAIDROOT == "" ]]; then
-  /bin/cp /boot/bzfirmware /usr
-  /bin/cp /boot/bzmodules /lib
-
   bzcheck "bzimage"
   bzcheck "bzroot"
   bzcheck "bzroot-gui"
-  bzcheck_custom "bzfirmware" "/usr/bzfirmware"
-  bzcheck_custom "bzmodules" "/lib/bzmodules"
 
-  bzmount "/usr/bzfirmware" "usr"
-  bzmount "/lib/bzmodules" "lib"
+  bzmount "usr"
+  bzmount "lib"
 
   # now that /usr is mounted make /etc/rc.d a symlink
   /bin/rm -rf /etc/rc.d
@@ -192,7 +192,7 @@ fi
 if [[ $NONVFAT == btrfs || $NONVFAT == xfs ]]; then
   /usr/bin/chown -R root:root /boot
   /usr/bin/chmod -R 644 /boot
-elif [ -f /boot/config.img ]; then
+else
   /usr/bin/chown -R root:root /boot/config
   /usr/bin/find /boot/config -type d -exec /usr/bin/chmod 700 {} \;
   /usr/bin/find /boot/config -type f -exec /usr/bin/chmod 600 {} \;
