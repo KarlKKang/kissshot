@@ -44,8 +44,8 @@ Therefore, I think the above solution has already achieved a decent level of int
 
 ## Applying Patches
 
-To apply the patches, just run the `tools/run_all.sh` script on the Unraid system to be patched. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive.
+To apply the patches, on the Unraid system to be patched, first mount a Btrfs filesystem labelled `UNRAID_EXTRA` at `/boot_extra`. Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive.
 
-To move the config folder to the Btrfs device, run `tools/move_config.sh` on the Unraid system. The original config folder will be renamed to `config.old` as a backup.
+To move the config folder to the Btrfs device, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup.
 
 Before updating Unraid to a newer version, run `tools/pre_update.sh`. This will remove the `backup` folder to avoid reverting back to the old version. It will also copy the `usr` and `lib` to the `previous` folder on the extra device.
