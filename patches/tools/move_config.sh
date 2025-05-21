@@ -3,8 +3,10 @@
 set -e
 
 if [ -d "/boot_extra/config" ]; then
-    echo "New config already exists. Exiting."
-    exit 1
+    if ! rmdir /boot_extra/config; then
+        echo "New config already exists. Exiting."
+        exit 1
+    fi
 fi
 
 mkdir /boot_extra/config
