@@ -3,12 +3,20 @@
 set -e
 cd "$(dirname "$0")"
 
+DEPLOY_DIR=/boot/root/deploy
 BZDIR="usr"
-if [ -d "/boot_extra/deploy/$BZDIR" ]; then
-    echo "A previous version of $BZDIR already exists."
-    exit 1
-else
-    mkdir -p /boot_extra/deploy
-    mv "$BZDIR" "/boot_extra/deploy"
+if [ -x "$DEPLOY_DIR/sbin/init" ]; then
+    if [ -d "$DEPLOY_DIR/$BZDIR" ]; then
+        rmdir "$DEPLOY_DIR/$BZDIR" || {
+            echo "A previous version of $BZDIR already exists."
+            exit 1
+        }
+    fi
+    mv "$BZDIR" "$DEPLOY_DIR"
+    chown root:root "$DEPLOY_DIR/$BZDIR"
+    chmod 755 "$DEPLOY_DIR/$BZDIR"
     echo "bzfirmware: $BZDIR: deployed successfully"
+else
+    echo "Please deploy bzroot first."
+    exit 1
 fi

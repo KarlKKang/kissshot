@@ -63,22 +63,16 @@ fi
 
 # LimeTech - determine if the 'unraidlabel' kernel append parameter was
 # provided to override which device is mounted for /boot (default: UNRAID)
-UNRAIDLABEL="UNRAID"
 UNRAIDROOT=
 set -- $(/bin/cat /proc/cmdline)
 for x in "$@"; do
   case "$x" in
-  unraidlabel=*)
-    UNRAIDLABEL="${x#unraidlabel=}"
-    ;;
   root=*)
     UNRAIDROOT="${x#root=}"
     ;;
   esac
 done
 
-# LimeTech - poll for device with $UNRAIDLABEL present, with 30-sec timeout
-# this serves to synchronize this script with USB subsystem
 abort() {
   /bin/echo "$1"
   /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
@@ -88,48 +82,6 @@ abort() {
   /bin/echo
   /sbin/reboot -fd
 }
-
-find_device() {
-  # find which USB flash device/partition has the indicated label
-  local LABEL=$1
-  local i
-  for i in {1..30}; do
-    DEVICE=$(/sbin/blkid -L "$LABEL")
-    [[ -z $DEVICE ]] && /bin/sleep 1 || return 0
-  done
-  return 1
-}
-
-/bin/echo -n "waiting up to 30 sec for device with label $UNRAIDLABEL to come online ... "
-find_device "$UNRAIDLABEL" && /bin/echo "found $DEVICE" || abort "not found"
-
-# detect filesystem from boot device
-if /sbin/blkid -s TYPE $DEVICE | /bin/grep -q "btrfs" ; then
-  NONVFAT=btrfs
-  /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,degraded,discard=sync $DEVICE /boot || abort "cannot mount $DEVICE"
-elif /sbin/blkid -s TYPE $DEVICE | /bin/grep -q "xfs" ; then
-  NONVFAT=xfs
-  /sbin/mount -v -t xfs -o auto,rw,noatime,nodiratime,discard $DEVICE /boot || abort "cannot mount $DEVICE"
-else
-  /bin/echo "Checking $DEVICE ..."
-  FSCK=$(/sbin/fsck.fat -a -w $DEVICE 2>/dev/null)
-  if [[ "$FSCK" == *"differences between boot sector and its backup"* ]] ; then
-    /sbin/fsck.fat -w $DEVICE 2>/dev/null <<< "1"
-  else
-    echo "$FSCK"
-  fi
-  /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed $DEVICE /boot || abort "cannot mount $DEVICE"
-fi
-
-UNRAID_EXTRA_LABEL="UNRAID_EXTRA"
-/bin/echo -n "waiting up to 30 sec for device with label $UNRAID_EXTRA_LABEL to come online ... "
-find_device "$UNRAID_EXTRA_LABEL" && /bin/echo "found $DEVICE" || abort "not found"
-/sbin/btrfs device scan --all-devices || abort "cannot scan for BTRFS devices"
-/bin/mkdir -p /boot_extra
-/sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,degraded "$DEVICE" /boot_extra || abort "cannot mount $DEVICE"
-/bin/mkdir -p /boot/config
-/sbin/mount -v --bind /boot_extra/config /boot/config || abort "cannot bind mount /boot_extra/config to /boot/config"
-/bin/rm -rf /boot_extra/overlay
 
 # check initial files used to boot
 bzcheck(){
@@ -150,25 +102,10 @@ bzcheck(){
   [[ ${HASH1:0:64} != "${HASH2:0:64}" ]] && abort "$BZFILE checksum error"
 }
 
-bzmount(){
-  local MNTDIR=$1
-  # setup an overlayfs
-  /bin/mkdir -p "/boot_extra/overlay/upperdir/$MNTDIR"
-  /bin/mkdir -p "/boot_extra/overlay/workdir/$MNTDIR"
-  if [ -d "/boot_extra/deploy/$MNTDIR" ]; then
-    /bin/rm -rf "/boot_extra/$MNTDIR"
-    /bin/mv "/boot_extra/deploy/$MNTDIR" "/boot_extra"
-  fi
-  /sbin/mount -v -t overlay overlay -o "lowerdir=/boot_extra/$MNTDIR,upperdir=/boot_extra/overlay/upperdir/$MNTDIR,workdir=/boot_extra/overlay/workdir/$MNTDIR" "/$MNTDIR" || abort "cannot mount overlayfs for $MNTDIR"
-}
-
 if [[ $UNRAIDROOT == "" ]]; then
   bzcheck "bzimage"
   bzcheck "bzroot"
   bzcheck "bzroot-gui"
-
-  bzmount "usr"
-  bzmount "lib"
 
   # now that /usr is mounted make /etc/rc.d a symlink
   /bin/rm -rf /etc/rc.d
@@ -191,15 +128,19 @@ else
   [[ ! -f /etc/rc.d/rc.S.cont ]] && abort "unable to continue - you must remove 'root=$UNRAIDROOT' from syslinux.cfg"
 fi
 
+# mount /root as an overlayfs
+ROOT_OVERLAY_DIR=/var/local/root_overlay
+/bin/mkdir -p "$ROOT_OVERLAY_DIR"
+/sbin/mount -v -t tmpfs -o mode=0710 tmpfs "$ROOT_OVERLAY_DIR"
+/bin/mkdir -p "$ROOT_OVERLAY_DIR/upperdir" "$ROOT_OVERLAY_DIR/workdir"
+/usr/bin/chmod -R 710 "$ROOT_OVERLAY_DIR"
+/sbin/mount -v -t overlay overlay -o "lowerdir=/root,upperdir=$ROOT_OVERLAY_DIR/upperdir,workdir=$ROOT_OVERLAY_DIR/workdir" "/root" || abort "cannot mount overlayfs for /root"
+/usr/bin/chmod 710 /root
+
 # set permissions for non vfat boot on /boot
-if [[ $NONVFAT == btrfs || $NONVFAT == xfs ]]; then
-  /usr/bin/chown -R root:root /boot
-  /usr/bin/chmod -R 644 /boot
-else
-  /usr/bin/chown -R root:root /boot/config
-  /usr/bin/find /boot/config -type d -exec /usr/bin/chmod 700 {} \;
-  /usr/bin/find /boot/config -type f -exec /usr/bin/chmod 600 {} \;
-fi
+/usr/bin/chown -R root:root /boot/config
+/usr/bin/find /boot/config -type d -exec /usr/bin/chmod 700 {} \;
+/usr/bin/find /boot/config -type f -exec /usr/bin/chmod 600 {} \;
 
 . /etc/unraid-version
 # log all PHP warnings (for beta|rc releases)

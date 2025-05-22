@@ -233,7 +233,7 @@ fi
 # limetech - but not /, /lib, /usr or /boot (yet)
 log "Unmounting local file systems:"
 EXCLUDE_TYPES=("proc" "sysfs" "tmpfs" "devtmpfs" "devpts" "nfsd")
-EXCLUDE_PATHS=("/" "/lib" "/usr" "/boot" "/boot/config" "/boot_extra")
+EXCLUDE_PATHS=("/" "/boot" "/boot/config" "/boot/root")
 while IFS= read -r LINE; do
   MOUNT_TYPE=$(/bin/echo "$LINE" | awk '{print $3}')
   MOUNT_PATH=$(/bin/echo "$LINE" | awk '{print $2}')
@@ -262,20 +262,12 @@ fi
 log "Remounting /boot read-only:"
 run /bin/mount -v -o remount,ro /boot
 
-log "Remounting /lib read-only:"
-run /bin/mount -v -o remount,ro /lib
-
-log "Remounting /usr read-only:"
-run /bin/mount -v -o remount,ro /usr
-
-log "Remounting /boot_extra read-only:"
-run /bin/mount -v -o remount,ro /boot_extra
-
-log "Remounting /boot/config read-only:"
-run /bin/mount -v -o remount,ro /boot/config
-
 log "Remounting root filesystem read-only:"
 run /bin/mount -v -n -o remount,ro /
+
+# This also makes /boot/config read-only
+log "Remounting /boot/root read-only:"
+run /bin/mount -v -n -o remount,ro /boot/root
 
 # Update PATH hashes:
 hash -r
