@@ -54,6 +54,10 @@ if [[ -d /run ]]; then
   fi
 fi
 
+if ! /bin/grep -wq "devtmpfs /dev devtmpfs" /proc/mounts; then
+  /sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev
+fi
+
 # LimeTech - lets mount debugfs
 /sbin/mount -v -t debugfs none /sys/kernel/debug
 
@@ -117,7 +121,6 @@ else
   /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed $DEVICE /boot || abort "cannot mount $DEVICE"
 fi
 
-/sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev
 UNRAID_EXTRA_LABEL="UNRAID_EXTRA"
 /bin/echo -n "waiting up to 30 sec for device with label $UNRAID_EXTRA_LABEL to come online ... "
 find_device "$UNRAID_EXTRA_LABEL" && /bin/echo "found $DEVICE" || abort "not found"
