@@ -59,22 +59,20 @@ ROOT_DEVICE_MNT=/mnt/root_device
 /bin/mkdir -p "$ROOT_DEVICE_MNT"
 /sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,degraded "$ROOT_DEVICE" "$ROOT_DEVICE_MNT" || abort "cannot mount $ROOT_DEVICE"
 
-# prepare the overlayfs for the new root
-ROOT_OVERLAY_DIR="$ROOT_DEVICE_MNT/root"
-if [ -x "$ROOT_OVERLAY_DIR/deploy/sbin/init" ]; then
-  /bin/rm -rf "$ROOT_OVERLAY_DIR/lowerdir"
-  /bin/mv "$ROOT_OVERLAY_DIR/deploy" "$ROOT_OVERLAY_DIR/lowerdir"
+# snapshot the prod root subvolume
+if /sbin/btrfs subvolume show "$ROOT_DEVICE_MNT/root-running" >/dev/null 2>&1; then
+  /sbin/btrfs subvolume delete -c -R "$ROOT_DEVICE_MNT/root-running" || abort "cannot delete old root-running subvolume"
+  /sbin/btrfs subvolume sync "$ROOT_DEVICE_MNT" || abort "cannot sync $ROOT_DEVICE_MNT"
 fi
-/bin/rm -rf "$ROOT_OVERLAY_DIR/upperdir" "$ROOT_OVERLAY_DIR/workdir"
-/bin/mkdir "$ROOT_OVERLAY_DIR/upperdir" "$ROOT_OVERLAY_DIR/workdir" || abort "cannot create overlayfs directories"
+/sbin/btrfs subvolume snapshot "$ROOT_DEVICE_MNT/root/prod" "$ROOT_DEVICE_MNT/root-running" || abort "cannot create root-running snapshot"
 
-# mount the new root
+# bind mount the new root
 ROOT_MNT=/mnt/root
 /bin/mkdir -p "$ROOT_MNT"
-/sbin/mount -v -t overlay overlay -o "lowerdir=$ROOT_OVERLAY_DIR/lowerdir,upperdir=$ROOT_OVERLAY_DIR/upperdir,workdir=$ROOT_OVERLAY_DIR/workdir" "$ROOT_MNT" || abort "cannot mount overlayfs for $ROOT_MNT"
+/sbin/mount -v --bind "$ROOT_DEVICE_MNT/root-running" "$ROOT_MNT" || abort "cannot bind mount $ROOT_DEVICE_MNT/root-running to $ROOT_MNT"
 
 # mount the UNRAID USB flash into the new root
-BOOT_MNT=/mnt/root/boot
+BOOT_MNT="$ROOT_MNT/boot"
 /bin/mkdir -p "$BOOT_MNT"
 /sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed "$UNRAID_DEVICE" "$BOOT_MNT" || abort "cannot mount $UNRAID_DEVICE"
 
@@ -82,8 +80,9 @@ BOOT_MNT=/mnt/root/boot
 mkdir -p "$BOOT_MNT/config"
 /sbin/mount -v --bind "$ROOT_DEVICE_MNT/config" "$BOOT_MNT/config" || abort "cannot bind mount $ROOT_DEVICE_MNT/config to $BOOT_MNT/config"
 
-# bind mount ROOT_OVERLAY_DIR into the new root
+# bind mount /root
 mkdir -p "$BOOT_MNT/root"
-/sbin/mount -v --bind "$ROOT_OVERLAY_DIR" "$BOOT_MNT/root" || abort "cannot bind mount $ROOT_OVERLAY_DIR to $BOOT_MNT/root"
+/sbin/mount -v --bind "$ROOT_DEVICE_MNT/root" "$BOOT_MNT/root" || abort "cannot bind mount $ROOT_DEVICE_MNT/root to $BOOT_MNT/root"
 
+/bin/umount -v "$ROOT_DEVICE_MNT" || abort "cannot unmount $ROOT_DEVICE_MNT"
 exec /sbin/switch_root "$ROOT_MNT" /sbin/init "$@" || abort "cannot switch root to $ROOT_MNT"

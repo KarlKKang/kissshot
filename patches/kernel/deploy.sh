@@ -16,7 +16,7 @@ else
     echo "kernel: $BZFILE: deployed successfully"
 fi
 
-DEPLOY_DIR=/boot/root/deploy
+DEPLOY_DIR=/boot/root/staging
 BZDIR="lib"
 if [ -x "$DEPLOY_DIR/sbin/init" ]; then
     if [ -d "$DEPLOY_DIR/$BZDIR" ]; then

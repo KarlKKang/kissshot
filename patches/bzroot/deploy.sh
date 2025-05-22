@@ -16,14 +16,14 @@ else
     echo "bzroot: $BZFILE: deployed successfully"
 fi
 
-DEPLOY_DIR=/boot/root/deploy
-if [ -d "$DEPLOY_DIR" ]; then
-    rmdir "$DEPLOY_DIR" || {
-        echo "A previous version of root already exists."
-        exit 1
-    }
+DEPLOY_DIR=/boot/root/staging
+if btrfs subvolume show "$DEPLOY_DIR" >/dev/null 2>&1; then
+    echo "A previous version of root already exists."
+    exit 1
 fi
-mv ./root "$DEPLOY_DIR"
+btrfs subvolume create "$DEPLOY_DIR"
+mv ./root/* "$DEPLOY_DIR"
+rmdir ./root
 chown root:root "$DEPLOY_DIR"
 chmod 755 "$DEPLOY_DIR"
 echo "bzroot: root: deployed successfully"

@@ -12,5 +12,8 @@ else
     echo "bzroot: $BZFILE: revert completed"
 fi
 
-rm -rf /boot/root/deploy
+if btrfs subvolume show /boot/root/staging >/dev/null 2>&1; then
+    btrfs subvolume delete -c -R /boot/root/staging
+    btrfs subvolume sync /boot/root
+fi
 echo "bzroot: root: revert completed"

@@ -10,13 +10,11 @@ if ! mountpoint -q "$MNT_DIR"; then
 fi
 
 if [ -d "$MNT_DIR/config" ]; then
-    if ! rmdir "$MNT_DIR/config"; then
-        echo "New config already exists. Exiting."
-        exit 1
-    fi
+    echo "New config already exists. Exiting."
+    exit 1
 fi
 
-mkdir "$MNT_DIR/config"
+btrfs subvolume create "$MNT_DIR/config"
 rsync -a /boot/config/ "$MNT_DIR/config/"
 if mountpoint -q /boot/config; then
     umount /boot/config
