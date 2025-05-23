@@ -57,7 +57,7 @@ ROOT_DEVICE=$DEVICE
 # mount root device
 ROOT_DEVICE_MNT=/mnt/root_device
 /bin/mkdir -p "$ROOT_DEVICE_MNT"
-/sbin/mount -v -t btrfs -o auto,rw,noatime,nodiratime,degraded "$ROOT_DEVICE" "$ROOT_DEVICE_MNT" || abort "cannot mount $ROOT_DEVICE"
+/sbin/mount -v -t btrfs -o auto,rw,noatime,degraded "$ROOT_DEVICE" "$ROOT_DEVICE_MNT" || abort "cannot mount $ROOT_DEVICE"
 
 # snapshot the prod root subvolume
 if /sbin/btrfs subvolume show "$ROOT_DEVICE_MNT/root-running" >/dev/null 2>&1; then
@@ -74,7 +74,7 @@ ROOT_MNT=/mnt/root
 # mount the UNRAID USB flash into the new root
 BOOT_MNT="$ROOT_MNT/boot"
 /bin/mkdir -p "$BOOT_MNT"
-/sbin/mount -v -t vfat -o auto,rw,flush,noatime,nodiratime,dmask=77,fmask=177,shortname=mixed "$UNRAID_DEVICE" "$BOOT_MNT" || abort "cannot mount $UNRAID_DEVICE"
+/sbin/mount -v -t vfat -o auto,rw,flush,noatime,dmask=77,fmask=177,shortname=mixed "$UNRAID_DEVICE" "$BOOT_MNT" || abort "cannot mount $UNRAID_DEVICE"
 
 # bind mount the config directory
 mkdir -p "$BOOT_MNT/config"
