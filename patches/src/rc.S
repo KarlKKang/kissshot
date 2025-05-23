@@ -131,9 +131,9 @@ fi
 # mount /root as an overlayfs
 ROOT_OVERLAY_DIR=/var/local/root_overlay
 /bin/mkdir -p "$ROOT_OVERLAY_DIR"
-/sbin/mount -v -t tmpfs -o mode=0710 tmpfs "$ROOT_OVERLAY_DIR"
+/sbin/mount -v -t tmpfs -o mode=0755 tmpfs "$ROOT_OVERLAY_DIR"
 /bin/mkdir -p "$ROOT_OVERLAY_DIR/upperdir" "$ROOT_OVERLAY_DIR/workdir"
-/usr/bin/chmod -R 710 "$ROOT_OVERLAY_DIR"
+/usr/bin/chmod 710 "$ROOT_OVERLAY_DIR"/*
 /sbin/mount -v -t overlay overlay -o "lowerdir=/root,upperdir=$ROOT_OVERLAY_DIR/upperdir,workdir=$ROOT_OVERLAY_DIR/workdir" "/root" || abort "cannot mount overlayfs for /root"
 /usr/bin/chmod 710 /root
 
