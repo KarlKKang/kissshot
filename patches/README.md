@@ -12,7 +12,12 @@ However, under memory pressure, `/usr` and `/lib` will be evicted from RAM, and 
 
 [Unraid 7.0](https://docs.unraid.net/unraid-os/release-notes/7.0.0/#excessive-flash-drive-activity-slows-the-system-down) introduces the `fastusr` functionality, so that `/usr` is always run in RAM to avoid the performance issues. However, `/lib` is still mounted from the flash. 
 
-This patch puts the `/usr` and `/lib` directories uncompressed onto a Btrfs device (or multi-device RAID). NVMe SSDs are preferred for performance reasons, so the kernel is recompiled with the NVMe drivers built in. This provides much higher reliability and resiliency while also leaving plenty of headroom for future growth of the directories. The XZ decompression overhead is also avoided. The Btrfs filesystem should be labelled as `UNRAID_EXTRA`, and will be mounted at `/boot_extra`. The `/usr` and `/lib` directories are still mounted as overlayfs, and will start fresh on every boot, just like the native behavior. The upper layer and workdir of the overlayfs are also moved to the Btrfs device, which should further reduce RAM usage, especially as of right now the unraid-api comes with quite bloated npm packages.
+This patch unpacks the entire root onto a Btrfs device (or multi-device RAID). NVMe SSDs are preferred for performance reasons, so the kernel is recompiled with the NVMe drivers built in. This provides much higher reliability and resiliency while also leaving plenty of headroom for future growth of the OS size. The XZ decompression overhead is also avoided. The mounted root is a Btrfs snapshot that starts fresh on every boot, so no state will be preserved across reboots, just like the stock behavior.
+
+More RAM should also be made available with this patch. Previously, the upper and work directories of the overlayfs were in RAM, which could be filled up with unpacked plugin files, especially as of right now the unraid-api comes with quite bloated npm packages. The initramfs is also removed when switching to the actual root.
+
+> [!IMPORTANT]
+> The snapshot is destroyed and recreated **on boot**. So if there are any sensitive files that rely on the root being stored in RAM and deleted immediately on power loss, extra care needs to be taken. One such example is `/root/keyfile` used to unlock the LUKS encrypted drives. To resolve this issue, this patch mounts an overlayfs on top of `/root` with the upper and work directories in RAM. This way the keyfile only lives in RAM.
 
 ## Boot Drive Silent Corruptions
 
@@ -27,7 +32,7 @@ Checksumming `bzfirmware` and `bzmodules` is not required after this patch since
 - The `bzimage` and `bzroot` files are only loaded once during boot, unlike `bzfirmware` and `bzmodules` which are read again if they are evicted from RAM.
 - The `bzroot` file contains two sections:
   - The first section is the microcode patch, in an uncompressed CPIO archive. Both the integrity and authenticity of the microcode patch are verified by the CPU itself, so it is not possible to apply a corrupted patch. It's easy to verify that the patch is applied by running `dmesg | grep microcode`. It should output something like `microcode: Current revision: ...`. It can be cross-checked against the list of current [AMD microcode patches](https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/amd-ucode/README) and [Intel microcode patches](https://www.intel.com/content/www/us/en/developer/topic-technology/software-security-guidance/processors-affected-consolidated-product-cpu-model.html).
-  - The second section is the root filesystem, compressed with XZ, with CRC32 checksums. The kernel should raise an error if the checksums do not match as it decompresses the file.
+  - The second section is the initramfs, compressed with XZ, with CRC32 checksums. The kernel should raise an error if the checksums do not match as it decompresses the file.
 - The `bzimage` file also contains a compressed and an uncompressed section:
   - The first uncompressed section is a small stub that does some basic hardware initialization and decompresses the second section. There's basically no way to verify the integrity of this section, but any failure in this stage should be catastrophic, like a hardware failure. This is the same reason why we don't bother with the bootloader itself.
   - The second section is the compressed kernel image. By default, Unraid ships it with LZMA compression. LZMA is not checksummed. Therefore, this patch recompiles the kernel with XZ compression, which is checksummed with CRC32. The kernel should raise an error if there's a checksum mismatch.
@@ -44,8 +49,6 @@ Therefore, I think the above solution has already achieved a decent level of int
 
 ## Applying Patches
 
-To apply the patches, on the Unraid system to be patched, first mount a Btrfs filesystem labelled `UNRAID_EXTRA` at `/boot_extra`. Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive.
+To apply the patches, on the Unraid system to be patched, first mount a Btrfs filesystem labelled `ROOT` at `/mnt/root`. Create a subvolume `/mnt/root/root` and bind mount it to `/boot/root`. Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive. To move the config folder to the Btrfs device, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup. When finished, `/mnt/root` should be unmounted.
 
-To move the config folder to the Btrfs device, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup.
-
-Before updating Unraid to a newer version, run `tools/pre_update.sh`. This will remove the `backup` folder to avoid reverting back to the old version. It will also copy the `usr` and `lib` to the `previous` folder on the extra device.
+On a patch system, before updating Unraid to a newer version, run `tools/pre_update.sh`. This will remove the `backup` folder to avoid reverting back to the old version. It will also take a snapshot of the current root at `/boot/root/previous`. Then it's safe to run Unraid's update tool as usual. Before rebooting, run `tools/run_all.sh` to apply the new patches.
