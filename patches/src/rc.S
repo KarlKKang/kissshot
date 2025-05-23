@@ -113,8 +113,22 @@ if [[ $UNRAIDROOT == "" ]]; then
 
   # move /var/log to a tmpfs
   /bin/mv -f /var/log/* /var/empty
-  /sbin/mount -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
+  /sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
   /bin/mv -f /var/empty/* /var/log
+
+  # move /tmp to a tmpfs
+  /bin/mv -f /tmp/* /var/empty
+  /sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
+  /bin/mv -f /var/empty/* /tmp
+
+  # make /var/lock a symlink to /run/lock
+  if [ ! -d /run/lock ]; then
+    /bin/mkdir -p /run/lock
+    /usr/bin/chmod 755 /run/lock
+  fi
+  /bin/mv -f /var/lock/* /run/lock
+  /bin/rm -rf /var/lock
+  /bin/ln -sf /run/lock /var
 else
   /bin/echo "Checking root filesystem"
   /sbin/fsck -C -a $UNRAIDROOT
