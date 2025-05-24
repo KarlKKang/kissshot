@@ -23,12 +23,12 @@ abort() {
 
 # Mount /proc if it is not already mounted:
 if [[ ! -d /proc/sys ]]; then
-  /sbin/mount -v proc /proc -n -t proc || abort "Cannot mount proc on /proc"
+  /sbin/mount -v proc /proc -t proc || abort "Cannot mount proc on /proc"
 fi
 
 # Mount /sys if it is not already mounted:
 if [[ ! -d /sys/kernel ]]; then
-  /sbin/mount -v sysfs /sys -n -t sysfs || abort "Cannot mount sysfs on /sys"
+  /sbin/mount -v sysfs /sys -t sysfs || abort "Cannot mount sysfs on /sys"
 fi
 
 # The efivarfs filesystem is used for reading and writing EFI variables, such
@@ -57,12 +57,12 @@ fi
 # initrd has already done so):
 if [[ -d /run ]]; then
   if ! /bin/grep -wq "tmpfs /run tmpfs" /proc/mounts; then
-    /sbin/mount -v -n -t tmpfs tmpfs /run -o mode=0755,size=128M,nodev,nosuid,noexec || abort "Cannot mount tmpfs on /run"
+    /sbin/mount -v -t tmpfs tmpfs /run -o mode=0755,size=128M,nodev,nosuid,noexec || abort "Cannot mount tmpfs on /run"
   fi
 fi
 
 if ! /bin/grep -wq "devtmpfs /dev devtmpfs" /proc/mounts; then
-  /sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
+  /sbin/mount -v -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
 fi
 
 # LimeTech - lets mount debugfs

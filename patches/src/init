@@ -21,10 +21,10 @@ find_device() {
   return 1
 }
 
-/sbin/mount -v -n -t proc proc /proc || abort "Cannot mount proc on /proc"
-/sbin/mount -v -n -t sysfs sysfs /sys || abort "Cannot mount sysfs on /sys"
-/sbin/mount -v -n -t tmpfs -o mode=0755,size=128M,nodev,nosuid,noexec tmpfs /run || abort "Cannot mount tmpfs on /run"
-/sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
+/sbin/mount -v -t proc proc /proc || abort "Cannot mount proc on /proc"
+/sbin/mount -v -t sysfs sysfs /sys || abort "Cannot mount sysfs on /sys"
+/sbin/mount -v -t tmpfs -o mode=0755,size=128M,nodev,nosuid,noexec tmpfs /run || abort "Cannot mount tmpfs on /run"
+/sbin/mount -v -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
 
 # prepare the UNRAID USB flash drive
 UNRAID_LABEL="UNRAID"
