@@ -17,7 +17,7 @@ This patch unpacks the entire root onto a Btrfs device (or multi-device RAID). N
 More RAM should also be made available with this patch. Previously, the upper and work directories of the overlayfs were in RAM, which could be filled up with unpacked plugin files, especially as of right now the unraid-api comes with quite bloated npm packages. The initramfs is also removed when switching to the actual root.
 
 > [!IMPORTANT]
-> The snapshot is destroyed and recreated **on boot**. So if there are any sensitive files that rely on the root being stored in RAM and deleted immediately on power loss, extra care needs to be taken. One such example is `/root/keyfile` used to unlock the LUKS encrypted drives. To resolve this issue, this patch mounts an overlayfs on top of `/root` with the upper and work directories in RAM. This way the keyfile only lives in RAM.
+> The snapshot is destroyed and recreated **on boot**. So if there are any sensitive files that rely on the root being stored in RAM and deleted immediately on power loss, extra care needs to be taken. One such example is `/root/keyfile` used to unlock the LUKS encrypted drives. To resolve this issue, this patch mounts `/root` as a tmpfs. This way the keyfile only lives in RAM.
 
 ## Boot Drive Silent Corruptions
 
