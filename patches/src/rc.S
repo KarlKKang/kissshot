@@ -61,6 +61,8 @@ fi
 # LimeTech - lets mount debugfs
 /sbin/mount -v -t debugfs none /sys/kernel/debug
 
+shopt -s dotglob
+
 # move /var to a tmpfs
 /bin/mv -f /var /var_tmp
 /bin/mkdir -p /var
@@ -91,6 +93,8 @@ fi
 /bin/mv -f /root/* /var/empty
 /sbin/mount -v -t tmpfs -o mode=0710 tmpfs /root
 /bin/mv -f /var/empty/* /root
+
+shopt -u dotglob
 
 abort() {
   /bin/echo "$1"
