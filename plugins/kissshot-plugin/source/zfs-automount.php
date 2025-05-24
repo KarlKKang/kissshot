@@ -5,7 +5,13 @@ ini_set('display_errors', 1);
 
 require __DIR__ . '/helper.php';
 
-$zvol_mounts = [];
+$extra_mounts = [
+    'LABEL=ROOT' => [
+        'mountpoint' => '/mnt/kokorowatari/system',
+        'type' => 'btrfs',
+        'options' => 'noatime,subvol=/system',
+    ],
+];
 
 function get_datasets(): array|false
 {
@@ -92,7 +98,12 @@ function wait_for_device(string $device_path): bool
     $timeout = 30;
     while ($timeout > 0) {
         try {
-            exec('lsblk ' . escapeshellarg($device_path), $output, $retval);
+            if (str_starts_with($device_path, 'LABEL=')) {
+                $label = substr($device_path, 6);
+                exec('blkid -L ' . escapeshellarg($label), $output, $retval);
+            } else {
+                exec('lsblk ' . escapeshellarg($device_path), $output, $retval);
+            }
             if ($retval === 0) {
                 return true;
             }
@@ -108,20 +119,26 @@ function wait_for_device(string $device_path): bool
     return false;
 }
 
-function mount_zvol(string $dataset, string $mountpoint): bool
+function mount_extra(string $device, array $mount_config): bool
 {
+    $mountpoint = $mount_config['mountpoint'] ?? null;
+    $type = $mount_config['type'] ?? null;
+    $options = $mount_config['options'] ?? null;
+    if (!is_string($mountpoint) || !is_string($type) || !is_string($options)) {
+        logger('Invalid mount config for: ' . $device, LOG_LEVEL::ERROR);
+        return false;
+    }
     if (!create_mountpoint($mountpoint)) {
         return false;
     }
-    $device_path = '/dev/zvol/' . $dataset;
-    if (!wait_for_device($device_path)) {
+    if (!wait_for_device($device)) {
         return false;
     }
-    if (!system_command('mount ' . escapeshellarg($device_path) . ' ' . escapeshellarg($mountpoint))) {
-        logger('Cannot mount ZFS volume: ' . $dataset, LOG_LEVEL::ERROR);
+    if (!system_command('mount -t ' . escapeshellarg($type) . ' -o ' . escapeshellarg($options) . ' ' . escapeshellarg($device) . ' ' . escapeshellarg($mountpoint))) {
+        logger('Cannot mount ' . $device . ' at ' . $mountpoint, LOG_LEVEL::ERROR);
         return false;
     }
-    logger('Mounted ZFS volume: ' . $dataset . ' at ' . $mountpoint);
+    logger('Mounted ' . $device . ' at ' . $mountpoint);
     return true;
 }
 
@@ -134,13 +151,13 @@ function unload_all_keys(): void
     logger('All keys unloaded');
 }
 
-function unmount_zvol(string $mountpoint): void
+function unmount_extra(string $mountpoint): void
 {
     if (!system_command('umount ' . escapeshellarg($mountpoint))) {
-        logger('Cannot unmount ZFS volume: ' . $mountpoint, LOG_LEVEL::ERROR);
+        logger('Cannot unmount: ' . $mountpoint, LOG_LEVEL::ERROR);
         return;
     }
-    logger('Unmounted ZFS volume: ' . $mountpoint);
+    logger('Unmounted: ' . $mountpoint);
 }
 
 function unmount_dataset(string $dataset): void
@@ -186,7 +203,7 @@ function unmount_nonroot_datasets(): void
     }
 }
 
-function main(array $argv, array $zvol_mounts): void
+function main(array $argv, array $extra_mounts): void
 {
     if (count($argv) !== 2) {
         logger('Invalid number of arguments', LOG_LEVEL::ERROR);
@@ -205,12 +222,21 @@ function main(array $argv, array $zvol_mounts): void
         foreach ($encrypted_datasets as $dataset => $mountpoint) {
             mount($dataset, $mountpoint);
         }
-        foreach ($zvol_mounts as $dataset => $mountpoint) {
-            mount_zvol($dataset, $mountpoint);
+        foreach ($extra_mounts as $device => $mount_config) {
+            if (!is_string($device) || !is_array($mount_config)) {
+                logger('Invalid mount config for: ' . $device, LOG_LEVEL::ERROR);
+                continue;
+            }
+            mount_extra($device, $mount_config);
         }
     } elseif ($action === 'unmount') {
-        foreach ($zvol_mounts as $mountpoint) {
-            unmount_zvol($mountpoint);
+        foreach ($extra_mounts as $device => $mount_config) {
+            $mountpoint = $mount_config['mountpoint'] ?? null;
+            if (!is_string($mountpoint)) {
+                logger('Invalid mount config for: ' . $device, LOG_LEVEL::ERROR);
+                continue;
+            }
+            unmount_extra($mountpoint);
         }
         unmount_nonroot_datasets();
         unload_all_keys();
@@ -219,4 +245,4 @@ function main(array $argv, array $zvol_mounts): void
     }
 }
 
-main($argv, $zvol_mounts);
+main($argv, $extra_mounts);
