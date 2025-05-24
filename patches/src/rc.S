@@ -98,6 +98,13 @@ bzcheck "bzroot-gui"
 /bin/rm -rf /etc/rc.d
 /bin/ln -sf /usr/local/etc/rc.d /etc
 
+# move /var to a tmpfs
+/bin/mv -f /var /var_tmp
+/bin/mkdir -p /var
+/sbin/mount -v -t tmpfs -o mode=0755 tmpfs /var
+/bin/mv -f /var_tmp/* /var
+/bin/rm -rf /var_tmp
+
 # move /var/log to a tmpfs
 /bin/mv -f /var/log/* /var/empty
 /sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
