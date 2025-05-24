@@ -11,6 +11,16 @@
 # Set the path.
 PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
 
+abort() {
+  /bin/echo "$1"
+  /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
+  /bin/bash
+  /bin/umount -a
+  read -p "Press ENTER key to reboot..."
+  /bin/echo
+  /sbin/reboot -fd
+}
+
 # Mount /proc if it is not already mounted:
 if [[ ! -d /proc/sys ]]; then
   /sbin/mount -v proc /proc -n -t proc 2>/dev/null
@@ -61,50 +71,44 @@ fi
 # LimeTech - lets mount debugfs
 /sbin/mount -v -t debugfs none /sys/kernel/debug
 
-shopt -s dotglob
+move_to_tmpfs() {
+  local dir="$1"
+  local mount_opt="$2"
+  local tmp_dir
+  if [[ -d "$dir" ]]; then
+    if ! /bin/rmdir "$dir" 2>/dev/null; then
+      tmp_dir="${dir}_tmp"
+      while [[ -e "$tmp_dir" || -h "$tmp_dir" ]]; do
+        tmp_dir="${tmp_dir}_tmp"
+      done
+      /bin/mv "$dir" "$tmp_dir" || abort "Cannot move $dir to $tmp_dir"
+    fi
+  fi
+  /bin/mkdir "$dir" || abort "Cannot create $dir"
+  /sbin/mount -v -t tmpfs -o "$mount_opt" tmpfs "$dir" || abort "Cannot mount tmpfs on $dir"
+  if [[ -n "$tmp_dir" ]]; then
+    shopt -s dotglob
+    /bin/mv "$tmp_dir"/* "$dir" || abort "Cannot restore contents of $dir"
+    shopt -u dotglob
+    /bin/rmdir "$tmp_dir" || abort "Cannot remove $tmp_dir"
+  fi
+}
 
-# move /var to a tmpfs
-/bin/mv -f /var /var_tmp
-/bin/mkdir -p /var
-/sbin/mount -v -t tmpfs -o mode=0755 tmpfs /var
-/bin/mv -f /var_tmp/* /var
-/bin/rm -rf /var_tmp
-
-# move /var/log to a tmpfs
-/bin/mv -f /var/log/* /var/empty
-/sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
-/bin/mv -f /var/empty/* /var/log
+move_to_tmpfs /tmp "mode=1777,nosuid,nodev"
+move_to_tmpfs /root "mode=0710"
+move_to_tmpfs /var "mode=0755"
+move_to_tmpfs /var/log "size=128m,mode=0755"
 
 # make /var/lock a symlink to /run/lock
-if [ ! -d /run/lock ]; then
-  /bin/mkdir -p /run/lock
-  /bin/chmod 755 /run/lock
+if [[ ! -d /run/lock ]]; then
+  /bin/mkdir /run/lock || abort "Cannot create /run/lock"
+  /bin/chmod 755 /run/lock || abort "Cannot set permissions on /run/lock"
 fi
+shopt -s dotglob
 /bin/mv -f /var/lock/* /run/lock
-/bin/rm -rf /var/lock
-/bin/ln -sf /run/lock /var
-
-# move /tmp to a tmpfs
-/bin/mv -f /tmp/* /var/empty
-/sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
-/bin/mv -f /var/empty/* /tmp
-
-# move /root to a tmpfs
-/bin/mv -f /root/* /var/empty
-/sbin/mount -v -t tmpfs -o mode=0710 tmpfs /root
-/bin/mv -f /var/empty/* /root
-
 shopt -u dotglob
-
-abort() {
-  /bin/echo "$1"
-  /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
-  /bin/bash
-  /bin/umount -a
-  read -p "Press ENTER key to reboot..."
-  /bin/echo
-  /sbin/reboot -fd
-}
+/bin/rmdir /var/lock || abort "Cannot remove /var/lock"
+/bin/ln -s /run/lock /var || abort "Cannot create symlink /var/lock -> /run/lock"
 
 # check initial files used to boot
 bzcheck(){
