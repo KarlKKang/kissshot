@@ -61,6 +61,37 @@ fi
 # LimeTech - lets mount debugfs
 /sbin/mount -v -t debugfs none /sys/kernel/debug
 
+# move /var to a tmpfs
+/bin/mv -f /var /var_tmp
+/bin/mkdir -p /var
+/sbin/mount -v -t tmpfs -o mode=0755 tmpfs /var
+/bin/mv -f /var_tmp/* /var
+/bin/rm -rf /var_tmp
+
+# move /var/log to a tmpfs
+/bin/mv -f /var/log/* /var/empty
+/sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
+/bin/mv -f /var/empty/* /var/log
+
+# make /var/lock a symlink to /run/lock
+if [ ! -d /run/lock ]; then
+  /bin/mkdir -p /run/lock
+  /usr/bin/chmod 755 /run/lock
+fi
+/bin/mv -f /var/lock/* /run/lock
+/bin/rm -rf /var/lock
+/bin/ln -sf /run/lock /var
+
+# move /tmp to a tmpfs
+/bin/mv -f /tmp/* /var/empty
+/sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
+/bin/mv -f /var/empty/* /tmp
+
+# move /root to a tmpfs
+/bin/mv -f /root/* /var/empty
+/sbin/mount -v -t tmpfs -o mode=0710 tmpfs /root
+/bin/mv -f /var/empty/* /root
+
 abort() {
   /bin/echo "$1"
   /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
@@ -97,37 +128,6 @@ bzcheck "bzroot-gui"
 # now that /usr is mounted make /etc/rc.d a symlink
 /bin/rm -rf /etc/rc.d
 /bin/ln -sf /usr/local/etc/rc.d /etc
-
-# move /var to a tmpfs
-/bin/mv -f /var /var_tmp
-/bin/mkdir -p /var
-/sbin/mount -v -t tmpfs -o mode=0755 tmpfs /var
-/bin/mv -f /var_tmp/* /var
-/bin/rm -rf /var_tmp
-
-# move /var/log to a tmpfs
-/bin/mv -f /var/log/* /var/empty
-/sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
-/bin/mv -f /var/empty/* /var/log
-
-# move /tmp to a tmpfs
-/bin/mv -f /tmp/* /var/empty
-/sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
-/bin/mv -f /var/empty/* /tmp
-
-# make /var/lock a symlink to /run/lock
-if [ ! -d /run/lock ]; then
-  /bin/mkdir -p /run/lock
-  /usr/bin/chmod 755 /run/lock
-fi
-/bin/mv -f /var/lock/* /run/lock
-/bin/rm -rf /var/lock
-/bin/ln -sf /run/lock /var
-
-# move /root to a tmpfs
-/bin/mv -f /root/* /var/empty
-/sbin/mount -v -t tmpfs -o mode=0710 tmpfs /root
-/bin/mv -f /var/empty/* /root
 
 # set permissions for non vfat boot on /boot
 /usr/bin/chown -R root:root /boot/config
