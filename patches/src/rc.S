@@ -61,18 +61,6 @@ fi
 # LimeTech - lets mount debugfs
 /sbin/mount -v -t debugfs none /sys/kernel/debug
 
-# LimeTech - determine if the 'unraidlabel' kernel append parameter was
-# provided to override which device is mounted for /boot (default: UNRAID)
-UNRAIDROOT=
-set -- $(/bin/cat /proc/cmdline)
-for x in "$@"; do
-  case "$x" in
-  root=*)
-    UNRAIDROOT="${x#root=}"
-    ;;
-  esac
-done
-
 abort() {
   /bin/echo "$1"
   /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
@@ -102,45 +90,32 @@ bzcheck(){
   [[ ${HASH1:0:64} != "${HASH2:0:64}" ]] && abort "$BZFILE checksum error"
 }
 
-if [[ $UNRAIDROOT == "" ]]; then
-  bzcheck "bzimage"
-  bzcheck "bzroot"
-  bzcheck "bzroot-gui"
+bzcheck "bzimage"
+bzcheck "bzroot"
+bzcheck "bzroot-gui"
 
-  # now that /usr is mounted make /etc/rc.d a symlink
-  /bin/rm -rf /etc/rc.d
-  /bin/ln -sf /usr/local/etc/rc.d /etc
+# now that /usr is mounted make /etc/rc.d a symlink
+/bin/rm -rf /etc/rc.d
+/bin/ln -sf /usr/local/etc/rc.d /etc
 
-  # move /var/log to a tmpfs
-  /bin/mv -f /var/log/* /var/empty
-  /sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
-  /bin/mv -f /var/empty/* /var/log
+# move /var/log to a tmpfs
+/bin/mv -f /var/log/* /var/empty
+/sbin/mount -v -t tmpfs -o size=128m,mode=0755 tmpfs /var/log
+/bin/mv -f /var/empty/* /var/log
 
-  # move /tmp to a tmpfs
-  /bin/mv -f /tmp/* /var/empty
-  /sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
-  /bin/mv -f /var/empty/* /tmp
+# move /tmp to a tmpfs
+/bin/mv -f /tmp/* /var/empty
+/sbin/mount -v -t tmpfs -o mode=1777,nosuid,nodev tmpfs /tmp
+/bin/mv -f /var/empty/* /tmp
 
-  # make /var/lock a symlink to /run/lock
-  if [ ! -d /run/lock ]; then
-    /bin/mkdir -p /run/lock
-    /usr/bin/chmod 755 /run/lock
-  fi
-  /bin/mv -f /var/lock/* /run/lock
-  /bin/rm -rf /var/lock
-  /bin/ln -sf /run/lock /var
-else
-  /bin/echo "Checking root filesystem"
-  /sbin/fsck -C -a $UNRAIDROOT
-  RETVAL=$?
-  [[ $RETVAL -ge 2 ]] && abort "fsck failed with return value $RETVAL"
-  # Remount the root filesystem in read-write mode
-  /bin/echo "Remounting $UNRAIDROOT with read-write enabled."
-  /sbin/mount -w -v -n -o remount /
-  RETVAL=$?
-  [[ $RETVAL -gt 0 ]] && abort "failed to remount $UNRAIDROOT r/w with return value $RETVAL"
-  [[ ! -f /etc/rc.d/rc.S.cont ]] && abort "unable to continue - you must remove 'root=$UNRAIDROOT' from syslinux.cfg"
+# make /var/lock a symlink to /run/lock
+if [ ! -d /run/lock ]; then
+  /bin/mkdir -p /run/lock
+  /usr/bin/chmod 755 /run/lock
 fi
+/bin/mv -f /var/lock/* /run/lock
+/bin/rm -rf /var/lock
+/bin/ln -sf /run/lock /var
 
 # mount /root as an overlayfs
 ROOT_OVERLAY_DIR=/var/local/root_overlay
