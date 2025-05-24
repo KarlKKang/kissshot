@@ -23,12 +23,12 @@ abort() {
 
 # Mount /proc if it is not already mounted:
 if [[ ! -d /proc/sys ]]; then
-  /sbin/mount -v proc /proc -n -t proc 2>/dev/null
+  /sbin/mount -v proc /proc -n -t proc || abort "Cannot mount proc on /proc"
 fi
 
 # Mount /sys if it is not already mounted:
 if [[ ! -d /sys/kernel ]]; then
-  /sbin/mount -v sysfs /sys -n -t sysfs 2>/dev/null
+  /sbin/mount -v sysfs /sys -n -t sysfs || abort "Cannot mount sysfs on /sys"
 fi
 
 # The efivarfs filesystem is used for reading and writing EFI variables, such
@@ -46,11 +46,8 @@ if [[ -d /sys/firmware/efi/efivars ]]; then
       EFIVARFS="rw"
     fi
     case "$EFIVARFS" in
-    'rw')
-      /sbin/mount -o rw -t efivarfs none /sys/firmware/efi/efivars
-      ;;
-    'ro')
-      /sbin/mount -o ro -t efivarfs none /sys/firmware/efi/efivars
+    'rw'|'ro')
+      /sbin/mount -v -o "$EFIVARFS" -t efivarfs none /sys/firmware/efi/efivars || abort "Cannot mount efivarfs on /sys/firmware/efi/efivars"
       ;;
     esac
   fi
@@ -60,16 +57,16 @@ fi
 # initrd has already done so):
 if [[ -d /run ]]; then
   if ! /bin/grep -wq "tmpfs /run tmpfs" /proc/mounts; then
-    /sbin/mount -v -n -t tmpfs tmpfs /run -o mode=0755,size=128M,nodev,nosuid,noexec
+    /sbin/mount -v -n -t tmpfs tmpfs /run -o mode=0755,size=128M,nodev,nosuid,noexec || abort "Cannot mount tmpfs on /run"
   fi
 fi
 
 if ! /bin/grep -wq "devtmpfs /dev devtmpfs" /proc/mounts; then
-  /sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev
+  /sbin/mount -v -n -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
 fi
 
 # LimeTech - lets mount debugfs
-/sbin/mount -v -t debugfs none /sys/kernel/debug
+/sbin/mount -v -t debugfs none /sys/kernel/debug || abort "Cannot mount debugfs on /sys/kernel/debug"
 
 move_to_tmpfs() {
   local dir="$1"
@@ -135,7 +132,7 @@ bzcheck "bzroot-gui"
 
 # now that /usr is mounted make /etc/rc.d a symlink
 /bin/rm -rf /etc/rc.d
-/bin/ln -sf /usr/local/etc/rc.d /etc
+/bin/ln -s /usr/local/etc/rc.d /etc || abort "Cannot create symlink /etc/rc.d -> /usr/local/etc/rc.d"
 
 # set permissions for non vfat boot on /boot
 /bin/chown -R root:root /boot/config
