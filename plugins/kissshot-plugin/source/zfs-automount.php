@@ -230,7 +230,7 @@ function main(array $argv, array $extra_mounts): void
             mount_extra($device, $mount_config);
         }
     } elseif ($action === 'unmount') {
-        foreach ($extra_mounts as $device => $mount_config) {
+        foreach (array_reverse($extra_mounts) as $device => $mount_config) {
             $mountpoint = $mount_config['mountpoint'] ?? null;
             if (!is_string($mountpoint)) {
                 logger('Invalid mount config for: ' . $device, LOG_LEVEL::ERROR);
