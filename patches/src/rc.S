@@ -76,7 +76,7 @@ fi
 # make /var/lock a symlink to /run/lock
 if [ ! -d /run/lock ]; then
   /bin/mkdir -p /run/lock
-  /usr/bin/chmod 755 /run/lock
+  /bin/chmod 755 /run/lock
 fi
 /bin/mv -f /var/lock/* /run/lock
 /bin/rm -rf /var/lock
@@ -130,9 +130,9 @@ bzcheck "bzroot-gui"
 /bin/ln -sf /usr/local/etc/rc.d /etc
 
 # set permissions for non vfat boot on /boot
-/usr/bin/chown -R root:root /boot/config
-/usr/bin/find /boot/config -type d -exec /usr/bin/chmod 700 {} \;
-/usr/bin/find /boot/config -type f -exec /usr/bin/chmod 600 {} \;
+/bin/chown -R root:root /boot/config
+/usr/bin/find /boot/config -type d -exec /bin/chmod 700 {} \;
+/usr/bin/find /boot/config -type f -exec /bin/chmod 600 {} \;
 
 . /etc/unraid-version
 # log all PHP warnings (for beta|rc releases)
