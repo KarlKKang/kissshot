@@ -2,13 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.16">
-<!ENTITY md5       "aef1aab3b307a97570611d5f18cce7d9">
+<!ENTITY version   "2025.05.24">
+<!ENTITY md5       "348bb75d960161468d80b1aa35aa4039">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.24
+- Mount the system share from the boot btrfs device.
+- Trim the boot device.
+
 ###2025.05.16
 - Remove the interactive option of the restic docker run command.
 
