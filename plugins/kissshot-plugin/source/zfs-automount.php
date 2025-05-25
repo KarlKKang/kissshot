@@ -7,7 +7,7 @@ require __DIR__ . '/helper.php';
 
 $extra_mounts = [];
 
-function get_datasets(): array|false
+function get_automount_datasets(): array|false
 {
     $remount_datasets = [];
     $encrypted_datasets = [];
@@ -20,7 +20,7 @@ function get_datasets(): array|false
     }
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
-        if (count($line) !== 4) {
+        if (count($line) !== 5) {
             logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
             return false;
         }
@@ -208,7 +208,7 @@ function main(array $argv, array $extra_mounts): void
     }
     $action = $argv[1];
     if ($action === 'mount') {
-        $datasets = get_datasets();
+        $datasets = get_automount_datasets();
         if ($datasets === false) {
             return;
         }
