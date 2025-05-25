@@ -5,11 +5,10 @@ ini_set('display_errors', 1);
 
 require __DIR__ . '/helper.php';
 
-$fstrim_mounts = [
-    '/',
-];
+$fstrim_mounts = [];
 $zpools = [
     'kokorowatari',
+    'rpool',
 ];
 
 const RUNTIME_DIR = '/mnt/user/system/trim';
