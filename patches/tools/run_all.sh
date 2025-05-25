@@ -7,6 +7,11 @@ export ZFS_VER="2.3.1"
 set -e
 cd "$(dirname "$0")"
 
+if zfs list rpool/root@orphaned >/dev/null 2>&1; then
+    echo "Orphaned snapshot found. Please destroy it or rename it before proceeding."
+    exit 1
+fi
+
 run_command() {
     local command="$1"
     sh "../bzroot/$command.sh" &&
