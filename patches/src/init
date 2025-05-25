@@ -79,11 +79,11 @@ BOOT_MNT="$ROOT_MNT/boot"
 /sbin/mount -v -t vfat -o auto,rw,flush,noatime,dmask=77,fmask=177,shortname=mixed "$UNRAID_DEVICE" "$BOOT_MNT" || abort "cannot mount $UNRAID_DEVICE"
 
 # bind mount the config directory
-mkdir -p "$BOOT_MNT/config"
+/bin/mkdir -p "$BOOT_MNT/config"
 /sbin/mount -v --bind "$ROOT_DEVICE_MNT/config" "$BOOT_MNT/config" || abort "cannot bind mount $ROOT_DEVICE_MNT/config to $BOOT_MNT/config"
 
 # bind mount /root
-mkdir -p "$BOOT_MNT/root"
+/bin/mkdir -p "$BOOT_MNT/root"
 /sbin/mount -v --bind "$ROOT_DEVICE_MNT/root" "$BOOT_MNT/root" || abort "cannot bind mount $ROOT_DEVICE_MNT/root to $BOOT_MNT/root"
 
 /bin/umount -v "$ROOT_DEVICE_MNT" || abort "cannot unmount $ROOT_DEVICE_MNT"
