@@ -14,17 +14,20 @@ function get_datasets(): array|false
     $output = [];
     // Not tested: sorting by mountpoint allows mounting of parent datasets before children, so that children
     //  can have their own encryption root.
-    if (!system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint -s mountpoint', $output)) {
+    if (!system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint,canmount -s mountpoint', $output)) {
         logger('Cannot list ZFS datasets', LOG_LEVEL::ERROR);
         return false;
     }
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
-        if (count($line) !== 3) {
+        if (count($line) !== 4) {
             logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
             return false;
         }
-        [$name, $keylocation, $mountpoint] = $line;
+        [$name, $keylocation, $mountpoint, $canmount] = $line;
+        if ($canmount !== 'on') {
+            continue;
+        }
         if (strpos($name, '/') === false && $keylocation === 'none') {
             $root_datasets[$name] = $mountpoint;
             continue;
@@ -172,18 +175,18 @@ function unmount_dataset(string $dataset): void
 function unmount_nonroot_datasets(): void
 {
     $output = [];
-    if (!system_command('zfs list -t filesystem -H -o name,mounted -S mountpoint', $output)) {
+    if (!system_command('zfs list -t filesystem -H -o name,mounted,canmount -S mountpoint', $output)) {
         logger('Cannot list ZFS datasets', LOG_LEVEL::ERROR);
         return;
     }
     foreach ($output as $line_str) {
         $line = explode("\t", $line_str);
-        if (count($line) !== 2) {
+        if (count($line) !== 3) {
             logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
             return;
         }
-        [$name, $mounted] = $line;
-        if ($mounted !== 'yes') {
+        [$name, $mounted, $canmount] = $line;
+        if ($mounted !== 'yes' || $canmount !== 'on') {
             continue;
         }
         $slash_pos = strpos($name, '/');
