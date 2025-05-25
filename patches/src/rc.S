@@ -13,10 +13,12 @@ PATH=/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin
 
 abort() {
   /bin/echo "$1"
-  /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
-  /bin/bash
+  if read -r -t 5 -p "Press ENTER to enter a shell..."; then
+    /bin/echo "You will be dropped to a shell. Exit the shell to reboot."
+    /bin/bash
+  fi
   /bin/umount -a
-  read -p "Press ENTER key to reboot..."
+  read -rp "Press ENTER key to reboot..."
   /bin/echo
   /sbin/reboot -fd
 }
