@@ -28,6 +28,11 @@ find_device() {
 /sbin/mount -v -t tmpfs -o mode=0755,size=128M,nodev,nosuid,noexec tmpfs /run || abort "Cannot mount tmpfs on /run"
 /sbin/mount -v -t devtmpfs -o size=8M devtmpfs /dev || abort "Cannot mount devtmpfs on /dev"
 
+if read -r -t 5 -p "Press ENTER to enter a shell..."; then
+  /bin/echo "You will be dropped to a shell. Exit the shell to continue."
+  /bin/bash
+fi
+
 # prepare the UNRAID USB flash drive
 UNRAID_LABEL="UNRAID"
 /bin/echo -n "waiting up to 30 sec for device with label $UNRAID_LABEL to come online ... "
