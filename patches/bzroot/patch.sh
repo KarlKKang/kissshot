@@ -17,6 +17,15 @@ mv -i ../bzfirmware/usr/sbin/zpool ./root/sbin
 ln -si ../../sbin/zfs ../bzfirmware/usr/sbin
 ln -si ../../sbin/zpool ../bzfirmware/usr/sbin
 
+cp /usr/bin/ldd ./root
+echo "Please check the dependencies of /sbin/zfs:"
+chroot ./root /ldd /sbin/zfs
+read -rp "Press Enter to continue..."
+echo "Please check the dependencies of /sbin/zpool:"
+chroot ./root /ldd /sbin/zpool
+read -rp "Press Enter to continue..."
+rm ./root/ldd
+
 mkdir -p ./root/etc/modprobe.d
 cat ../../boot/config/modprobe.d/zfs.conf >./root/etc/modprobe.d/zfs.conf
 
