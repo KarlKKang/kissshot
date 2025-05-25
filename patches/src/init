@@ -33,6 +33,8 @@ if read -r -t 5 -p "Press ENTER to enter a shell..."; then
   /bin/bash
 fi
 
+/sbin/modprobe zfs || abort "cannot load zfs module"
+
 # prepare the UNRAID USB flash drive
 UNRAID_LABEL="UNRAID"
 /bin/echo -n "waiting up to 30 sec for device with label $UNRAID_LABEL to come online ... "
@@ -50,46 +52,30 @@ else
 fi
 UNRAID_DEVICE=$DEVICE
 
-# prepare the root device
-ROOT_LABEL="ROOT"
-/bin/echo -n "waiting up to 30 sec for device with label $ROOT_LABEL to come online ... "
-if find_device "$ROOT_LABEL"; then
-  /bin/echo "found $DEVICE"
-else
-  abort "not found"
+# import the rpool
+/sbin/zpool import -f -m -N rpool || abort "cannot import rpool"
+/sbin/zpool status -P rpool
+/sbin/zfs set canmount=off rpool || abort "cannot set canmount on rpool"
+
+# clone the production snapshot of the root dataset
+RUNNING_DATASET="rpool/root-running"
+if /sbin/zfs list "$RUNNING_DATASET" >/dev/null 2>&1; then
+  /sbin/zfs destroy -v -r "$RUNNING_DATASET" || abort "cannot destroy $RUNNING_DATASET"
 fi
-/sbin/btrfs device scan --all-devices || abort "cannot scan for BTRFS devices"
-ROOT_DEVICE=$DEVICE
-
-# mount root device
-ROOT_DEVICE_MNT=/mnt/root_device
-/bin/mkdir -p "$ROOT_DEVICE_MNT"
-/sbin/mount -v -t btrfs -o auto,rw,noatime,degraded "$ROOT_DEVICE" "$ROOT_DEVICE_MNT" || abort "cannot mount $ROOT_DEVICE"
-
-# snapshot the prod root subvolume
-if /sbin/btrfs subvolume show "$ROOT_DEVICE_MNT/root-running" >/dev/null 2>&1; then
-  /sbin/btrfs subvolume delete -c -R "$ROOT_DEVICE_MNT/root-running" || abort "cannot delete old root-running subvolume"
-  /sbin/btrfs subvolume sync "$ROOT_DEVICE_MNT" || abort "cannot sync $ROOT_DEVICE_MNT"
-fi
-/sbin/btrfs subvolume snapshot "$ROOT_DEVICE_MNT/root/prod" "$ROOT_DEVICE_MNT/root-running" || abort "cannot create root-running snapshot"
-
-# bind mount the new root
-ROOT_MNT=/mnt/root
+ROOT_MNT="/mnt/root"
 /bin/mkdir -p "$ROOT_MNT"
-/sbin/mount -v --bind "$ROOT_DEVICE_MNT/root-running" "$ROOT_MNT" || abort "cannot bind mount $ROOT_DEVICE_MNT/root-running to $ROOT_MNT"
+/sbin/zfs clone -o mountpoint="$ROOT_MNT" -o canmount=noauto rpool/root@production "$RUNNING_DATASET" || abort "cannot clone rpool/root@production"
+/sbin/zfs mount "$RUNNING_DATASET" || abort "cannot mount $RUNNING_DATASET"
 
-# mount the UNRAID USB flash into the new root
+# mount the UNRAID USB flash
 BOOT_MNT="$ROOT_MNT/boot"
 /bin/mkdir -p "$BOOT_MNT"
 /sbin/mount -v -t vfat -o auto,rw,flush,noatime,dmask=77,fmask=177,shortname=mixed "$UNRAID_DEVICE" "$BOOT_MNT" || abort "cannot mount $UNRAID_DEVICE"
 
-# bind mount the config directory
-/bin/mkdir -p "$BOOT_MNT/config"
-/sbin/mount -v --bind "$ROOT_DEVICE_MNT/config" "$BOOT_MNT/config" || abort "cannot bind mount $ROOT_DEVICE_MNT/config to $BOOT_MNT/config"
+# mount the config dataset
+CONFIG_MNT="$BOOT_MNT/config"
+/bin/mkdir -p "$CONFIG_MNT"
+/sbin/zfs set mountpoint="$CONFIG_MNT" canmount=noauto rpool/config || abort "cannot set mountpoint and canmount on rpool/config"
+/sbin/zfs mount rpool/config || abort "cannot mount rpool/config"
 
-# bind mount /root
-/bin/mkdir -p "$BOOT_MNT/root"
-/sbin/mount -v --bind "$ROOT_DEVICE_MNT/root" "$BOOT_MNT/root" || abort "cannot bind mount $ROOT_DEVICE_MNT/root to $BOOT_MNT/root"
-
-/bin/umount -v "$ROOT_DEVICE_MNT" || abort "cannot unmount $ROOT_DEVICE_MNT"
 exec /sbin/switch_root "$ROOT_MNT" /sbin/init "$@" || abort "cannot switch root to $ROOT_MNT"

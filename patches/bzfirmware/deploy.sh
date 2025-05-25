@@ -3,7 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 
-DEPLOY_DIR=/boot/root/staging
+DEPLOY_DIR=/mnt/rpool/root
 BZDIR="usr"
 if [ -x "$DEPLOY_DIR/sbin/init" ]; then
     if [ -d "$DEPLOY_DIR/$BZDIR" ]; then

@@ -12,8 +12,9 @@ else
     echo "bzroot: $BZFILE: revert completed"
 fi
 
-if btrfs subvolume show /boot/root/staging >/dev/null 2>&1; then
-    btrfs subvolume delete -c -R /boot/root/staging
-    btrfs subvolume sync /boot/root
+if zfs list rpool/root@production >/dev/null 2>&1; then
+    zfs rollback rpool/root@production
+elif zfs list rpool/root@previous >/dev/null 2>&1; then
+    zfs rollback rpool/root@previous
 fi
 echo "bzroot: root: revert completed"

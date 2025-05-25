@@ -13,5 +13,5 @@ else
 fi
 
 BZDIR="lib"
-rm -rf "/boot/root/staging/$BZDIR"
+rm -rf "/mnt/rpool/root/$BZDIR"
 echo "kernel: $BZDIR: revert completed"

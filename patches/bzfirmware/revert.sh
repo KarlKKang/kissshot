@@ -3,5 +3,5 @@
 set -e
 
 BZDIR="usr"
-rm -rf "/boot/root/staging/$BZDIR"
+rm -rf "/mnt/rpool/root/$BZDIR"
 echo "bzfirmware: $BZDIR: revert completed"

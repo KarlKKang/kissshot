@@ -17,14 +17,8 @@ else
 fi
 
 rm -rf ./root/lib
-DEPLOY_DIR=/boot/root/staging
-if btrfs subvolume show "$DEPLOY_DIR" >/dev/null 2>&1; then
-    echo "A previous version of root already exists."
-    exit 1
-fi
-btrfs subvolume create "$DEPLOY_DIR"
-mv ./root/* "$DEPLOY_DIR"
-rmdir ./root
+DEPLOY_DIR=/mnt/rpool/root
+rsync -a --delete ./root/ "$DEPLOY_DIR"
 chown root:root "$DEPLOY_DIR"
 chmod 755 "$DEPLOY_DIR"
 echo "bzroot: root: deployed successfully"

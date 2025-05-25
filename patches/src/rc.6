@@ -262,12 +262,17 @@ fi
 log "Remounting /boot read-only:"
 run /bin/mount -v -o remount,ro /boot
 
-# This also makes /boot/config read-only
-log "Remounting root filesystem read-only:"
+log "Remounting /boot/config read-only:"
+run /bin/mount -v -o remount,ro /boot/config
+
+log "Remounting / read-only:"
 run /bin/mount -v -n -o remount,ro /
 
 /bin/echo "Currently mounted filesystems:"
 /bin/cat /proc/mounts
+
+/bin/sync
+/usr/sbin/zpool sync
 
 # Update PATH hashes:
 hash -r
