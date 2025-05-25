@@ -21,6 +21,10 @@ run_command patch
 run_command pack
 run_command deploy
 
+if zfs list rpool/root@production >/dev/null 2>&1; then
+    zfs rename rpool/root@production rpool/root@orphaned
+    zfs destroy -d rpool/root@orphaned
+fi
 zfs snapshot rpool/root@production
 
 run_command cleanup
