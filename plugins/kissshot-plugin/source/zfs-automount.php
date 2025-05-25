@@ -5,13 +5,7 @@ ini_set('display_errors', 1);
 
 require __DIR__ . '/helper.php';
 
-$extra_mounts = [
-    'LABEL=ROOT' => [
-        'mountpoint' => '/mnt/kokorowatari/system',
-        'type' => 'btrfs',
-        'options' => 'noatime,subvol=/system',
-    ],
-];
+$extra_mounts = [];
 
 function get_datasets(): array|false
 {

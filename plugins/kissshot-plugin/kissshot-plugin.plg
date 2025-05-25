@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.24">
-<!ENTITY md5       "c6c6518dddc28976f1e7793b7f0e7212">
+<!ENTITY version   "2025.05.25">
+<!ENTITY md5       "7637eaf07cef53f988caa1e054189c8f">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.25
+- Revert back mounting the system share from the boot device.
+
 ###2025.05.24
 - Mount the system share from the boot btrfs device.
 - Trim the boot device.
