@@ -62,8 +62,10 @@ function get_btrfs_devices(): array
 function check_zpool(string $zpool, bool $scrub): void
 {
     if ($scrub) {
-        if (!system_command('zpool scrub ' . escapeshellarg($zpool))) {
-            logger('Cannot start ZFS scrub on: ' . $zpool, LOG_LEVEL::ERROR);
+        if (system_command('zpool scrub ' . escapeshellarg($zpool))) {
+            logger('zpool scrub started: ' . $zpool);
+        } else {
+            logger('Cannot start zpool scrub: ' . $zpool, LOG_LEVEL::ERROR);
             return;
         }
     }
@@ -83,7 +85,7 @@ function check_zpool(string $zpool, bool $scrub): void
         }
     }
     if ($healthy) {
-        logger('ZFS pool is healthy: ' . $zpool);
+        logger('zpool is healthy: ' . $zpool);
     } else {
         logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
     }

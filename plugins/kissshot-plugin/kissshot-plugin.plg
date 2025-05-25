@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.25">
-<!ENTITY md5       "d00797c1abd368b4e0462826f7cc8d70">
+<!ENTITY md5       "bb8308fcf480e25bbb36ec3c58a664f4">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -15,6 +15,7 @@
 - Disable btrfs health checks.
 - Trigger zpool scrubs from the health check script.
 - Don't try to mount already mounted ZFS datasets when automounting.
+- Update trim configuration.
 
 ###2025.05.24
 - Mount the system share from the boot btrfs device.
