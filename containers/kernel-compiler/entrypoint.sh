@@ -77,6 +77,13 @@ rm -rf "$OUT_DIR/lib/modules"
 mkdir -p "$OUT_DIR/lib/modules/$KERNEL_RELEASE"
 cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/." "$OUT_DIR/lib/modules/$KERNEL_RELEASE/"
 
+INITRAMFS_DIR="/data/initramfs"
+mkdir -p "$INITRAMFS_DIR/lib/modules/$KERNEL_RELEASE/extra"
+cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/extra/." "$INITRAMFS_DIR/lib/modules/$KERNEL_RELEASE/extra/"
+cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/modules.builtin"* "$INITRAMFS_DIR/lib/modules/$KERNEL_RELEASE/"
+cp -a "$MODULE_DIR/lib/modules/$KERNEL_RELEASE/modules.order" "$INITRAMFS_DIR/lib/modules/$KERNEL_RELEASE/"
+depmod -a -e -F "$SRC_WD/System.map" -E "$SRC_WD/Module.symvers" -b "$INITRAMFS_DIR" "$KERNEL_RELEASE"
+
 cd /root
 
 echo "Kernel compiled successfully."

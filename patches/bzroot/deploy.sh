@@ -16,6 +16,7 @@ else
     echo "bzroot: $BZFILE: deployed successfully"
 fi
 
+rm -rf ./root/lib
 DEPLOY_DIR=/boot/root/staging
 if btrfs subvolume show "$DEPLOY_DIR" >/dev/null 2>&1; then
     echo "A previous version of root already exists."
