@@ -113,6 +113,40 @@ function check_btrfs(string $device, bool $scrub): void
     }
 }
 
+function get_all_fstype(): array|false
+{
+    $output = [];
+    if (!system_command('findmnt -l -n -o FSTYPE', $output)) {
+        logger('Cannot list mounted filesystems', LOG_LEVEL::ERROR);
+        return false;
+    }
+    return array_map('trim', $output);
+}
+
+function health_check(RuntimeState $runtime): void
+{
+    $all_fstypes = get_all_fstype();
+    if ($all_fstypes === false) {
+        return;
+    }
+    $current_month = date('Y-m');
+    $last_scrub = $runtime->state['last_scrub'] ?? null;
+    $runtime->state['last_scrub'] = $current_month;
+    $scrub = $last_scrub !== $current_month;
+    if (in_array('zfs', $all_fstypes, true)) {
+        $zpools = get_zpools();
+        foreach ($zpools as $zpool) {
+            check_zpool($zpool, $scrub);
+        }
+    }
+    if (in_array('btrfs', $all_fstypes, true)) {
+        $btrfs_devices = get_btrfs_devices();
+        foreach ($btrfs_devices as $device) {
+            check_btrfs($device, $scrub);
+        }
+    }
+}
+
 function main(): void
 {
     try {
@@ -125,17 +159,7 @@ function main(): void
     } catch (RuntimeStateException) {
         return;
     }
-    $current_month = date('Y-m');
-    $last_scrub = $runtime->state['last_scrub'] ?? null;
-    $runtime->state['last_scrub'] = $current_month;
-    $zpools = get_zpools();
-    foreach ($zpools as $zpool) {
-        check_zpool($zpool, $last_scrub !== $current_month);
-    }
-    /* $btrfs_devices = get_btrfs_devices();
-    foreach ($btrfs_devices as $device) {
-        check_btrfs($device, $last_scrub !== $current_month);
-    } */
+    health_check($runtime);
     $runtime->commit();
     $array_lock->release();
 }

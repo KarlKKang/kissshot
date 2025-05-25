@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.25">
-<!ENTITY md5       "bb8308fcf480e25bbb36ec3c58a664f4">
+<!ENTITY md5       "20985aa2ba796bf61ba77492e40ace6e">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -12,7 +12,6 @@
 ###2025.05.25
 - Revert back mounting the system share from the boot device.
 - Ignore datasets with `canmount` not set to `on` when mounting.
-- Disable btrfs health checks.
 - Trigger zpool scrubs from the health check script.
 - Don't try to mount already mounted ZFS datasets when automounting.
 - Update trim configuration.
