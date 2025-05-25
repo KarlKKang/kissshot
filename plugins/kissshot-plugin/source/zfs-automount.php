@@ -9,12 +9,12 @@ $extra_mounts = [];
 
 function get_datasets(): array|false
 {
-    $root_datasets = [];
+    $remount_datasets = [];
     $encrypted_datasets = [];
     $output = [];
     // Not tested: sorting by mountpoint allows mounting of parent datasets before children, so that children
     //  can have their own encryption root.
-    if (!system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint,canmount -s mountpoint', $output)) {
+    if (!system_command('zfs list -t filesystem,volume -H -o name,keylocation,mountpoint,canmount,mounted -s mountpoint', $output)) {
         logger('Cannot list ZFS datasets', LOG_LEVEL::ERROR);
         return false;
     }
@@ -24,12 +24,12 @@ function get_datasets(): array|false
             logger('Cannot parse ZFS list output: ' . $line_str, LOG_LEVEL::ERROR);
             return false;
         }
-        [$name, $keylocation, $mountpoint, $canmount] = $line;
-        if ($canmount !== 'on') {
+        [$name, $keylocation, $mountpoint, $canmount, $mounted] = $line;
+        if (strpos($name, '/') === false && $keylocation === 'none' && $mounted === 'yes') {
+            $remount_datasets[$name] = $mountpoint;
             continue;
         }
-        if (strpos($name, '/') === false && $keylocation === 'none') {
-            $root_datasets[$name] = $mountpoint;
+        if ($canmount !== 'on' || $mounted !== 'no') {
             continue;
         }
         if ($keylocation === 'prompt' || $keylocation === 'none') {
@@ -40,7 +40,7 @@ function get_datasets(): array|false
         }
         $encrypted_datasets[$name] = $mountpoint;
     }
-    return [$root_datasets, $encrypted_datasets];
+    return [$remount_datasets, $encrypted_datasets];
 }
 
 function remount_noatime(string $mountpoint): void
@@ -212,8 +212,8 @@ function main(array $argv, array $extra_mounts): void
         if ($datasets === false) {
             return;
         }
-        [$root_datasets, $encrypted_datasets] = $datasets;
-        foreach ($root_datasets as $mountpoint) {
+        [$remount_datasets, $encrypted_datasets] = $datasets;
+        foreach ($remount_datasets as $mountpoint) {
             remount_noatime($mountpoint);
         }
         foreach ($encrypted_datasets as $dataset => $mountpoint) {

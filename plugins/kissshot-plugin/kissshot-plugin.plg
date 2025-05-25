@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.25">
-<!ENTITY md5       "60a6190043d40f63d7352668cbac6b4f">
+<!ENTITY md5       "72dc9a6fb4c27b6db2f2e513e1def603">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -14,6 +14,7 @@
 - Ignore datasets with `canmount` not set to `on` when mounting.
 - Disable btrfs health checks.
 - Trigger zpool scrubs from the health check script.
+- Don't try to mount already mounted ZFS datasets when automounting.
 
 ###2025.05.24
 - Mount the system share from the boot btrfs device.
