@@ -10,7 +10,6 @@ fi
 
 cat ../src/rc.S >./root/etc/rc.d/rc.S
 
-mv -i ../bzfirmware/usr/lib64/liblzo2.so* ./root/lib64
 mv -i ../bzfirmware/usr/lib64/libunwind.so* ./root/lib64
 mv -i ../bzfirmware/usr/lib64/libgcc_s.so* ./root/lib64
 mv -i ../bzfirmware/usr/sbin/zfs ./root/sbin
