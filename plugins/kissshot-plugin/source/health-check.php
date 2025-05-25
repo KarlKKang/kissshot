@@ -59,8 +59,14 @@ function get_btrfs_devices(): array
     return $devices;
 }
 
-function check_zpool(string $zpool): void
+function check_zpool(string $zpool, bool $scrub): void
 {
+    if ($scrub) {
+        if (!system_command('zpool scrub ' . escapeshellarg($zpool))) {
+            logger('Cannot start ZFS scrub on: ' . $zpool, LOG_LEVEL::ERROR);
+            return;
+        }
+    }
     $output = [];
     if (!system_command('zpool status -x -v ' . escapeshellarg($zpool), $output)) {
         logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
@@ -117,17 +123,17 @@ function main(): void
     } catch (RuntimeStateException) {
         return;
     }
-    $zpools = get_zpools();
-    foreach ($zpools as $zpool) {
-        check_zpool($zpool);
-    }
     $current_month = date('Y-m');
     $last_scrub = $runtime->state['last_scrub'] ?? null;
     $runtime->state['last_scrub'] = $current_month;
-    $btrfs_devices = get_btrfs_devices();
+    $zpools = get_zpools();
+    foreach ($zpools as $zpool) {
+        check_zpool($zpool, $last_scrub !== $current_month);
+    }
+    /* $btrfs_devices = get_btrfs_devices();
     foreach ($btrfs_devices as $device) {
         check_btrfs($device, $last_scrub !== $current_month);
-    }
+    } */
     $runtime->commit();
     $array_lock->release();
 }

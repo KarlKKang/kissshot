@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.05.25">
-<!ENTITY md5       "7637eaf07cef53f988caa1e054189c8f">
+<!ENTITY md5       "60a6190043d40f63d7352668cbac6b4f">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,9 @@
 <CHANGES>
 ###2025.05.25
 - Revert back mounting the system share from the boot device.
+- Ignore datasets with `canmount` not set to `on` when mounting.
+- Disable btrfs health checks.
+- Trigger zpool scrubs from the health check script.
 
 ###2025.05.24
 - Mount the system share from the boot btrfs device.
