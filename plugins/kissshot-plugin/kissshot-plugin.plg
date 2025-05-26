@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.05.25">
-<!ENTITY md5       "20985aa2ba796bf61ba77492e40ace6e">
+<!ENTITY version   "2025.05.26">
+<!ENTITY md5       "93b6b5014616ebadcb13816c42d9b0be">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.05.26
+- Scrub Btrfs asynchronously.
+
 ###2025.05.25
 - Revert back mounting the system share from the boot device.
 - Ignore datasets with `canmount` not set to `on` when mounting.

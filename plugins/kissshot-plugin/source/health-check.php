@@ -95,15 +95,11 @@ function check_btrfs(string $device, bool $scrub): void
 {
     $output = [];
     if ($scrub) {
-        if (!system_command('btrfs scrub start -B ' . escapeshellarg($device), $output)) {
-            logger('Btrfs scrub error on: ' . $device, LOG_LEVEL::ERROR);
+        if (system_command('btrfs scrub start ' . escapeshellarg($device), $output)) {
+            logger('Btrfs scrub started: ' . $device);
+        } else {
+            logger('Cannot start Btrfs scrub: ' . $device, LOG_LEVEL::ERROR);
             return;
-        }
-        foreach ($output as $line) {
-            if (empty($line)) {
-                continue;
-            }
-            logger($line);
         }
     }
     if (system_command('btrfs dev stats -c ' . escapeshellarg($device))) {
