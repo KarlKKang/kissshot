@@ -44,7 +44,7 @@ cp -a "$PATCH_DIR/." ./
 find . -type f -iname '*.patch' -print0 | xargs -n1 -0 patch -p1 -i
 
 make olddefconfig
-read -rp "Press enter to continue"
+read -rp "Press Enter to continue..."
 make "-j$(nproc)" bzImage
 make "-j$(nproc)"
 make "-j$(nproc)" modules
