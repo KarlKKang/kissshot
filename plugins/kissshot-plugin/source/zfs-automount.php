@@ -94,20 +94,14 @@ function wait_for_device(string $device_path): bool
 {
     $timeout = 30;
     while ($timeout > 0) {
-        try {
-            if (str_starts_with($device_path, 'LABEL=')) {
-                $label = substr($device_path, 6);
-                exec('blkid -L ' . escapeshellarg($label), $output, $retval);
-            } else {
-                exec('lsblk ' . escapeshellarg($device_path), $output, $retval);
-            }
-            if ($retval === 0) {
-                return true;
-            }
-        } catch (ValueError $e) {
-            logger($e->getMessage());
-            logger('Cannot check device: ' . $device_path, LOG_LEVEL::ERROR);
-            return false;
+        if (str_starts_with($device_path, 'LABEL=')) {
+            $label = substr($device_path, 6);
+            $cmd = 'blkid -L ' . escapeshellarg($label);
+        } else {
+            $cmd = 'lsblk ' . escapeshellarg($device_path);
+        }
+        if (system_command($cmd, log_error: false)) {
+            return true;
         }
         sleep(1);
         $timeout--;
