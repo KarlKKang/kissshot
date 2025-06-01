@@ -9,6 +9,9 @@
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.06.01
+- Check snapshots are actually mounted before trying to unmount them.
+
 ###2025.05.26
 - Scrub Btrfs asynchronously.
 

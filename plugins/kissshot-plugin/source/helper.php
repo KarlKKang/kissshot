@@ -46,7 +46,7 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
     }
 }
 
-function system_command(string $command, array &$output = []): bool
+function system_command(string $command, array &$output = [], bool $log_error = true): bool
 {
     $command .= ' 2>&1';
     try {
@@ -57,12 +57,14 @@ function system_command(string $command, array &$output = []): bool
         return false;
     }
     if ($retval !== 0 || $result === false) {
-        logger('Command exited with error code ' . $retval . ': ' . $command);
-        foreach ($output as $line) {
-            if (empty($line)) {
-                continue;
+        if ($log_error) {
+            logger('Command exited with error code ' . $retval . ': ' . $command);
+            foreach ($output as $line) {
+                if (empty($line)) {
+                    continue;
+                }
+                logger($line);
             }
-            logger($line);
         }
         return false;
     }

@@ -389,10 +389,20 @@ function snapshot_txg(array $txg, RuntimeState $runtime, array &$snapshots_to_re
     logger('Snapshots created for datasets: ' . implode(', ', array_keys($txg_snapshots)));
 }
 
+function is_mountpoint(string $path): bool
+{
+    return system_command('mountpoint -q ' . escapeshellarg($path), log_error: false);
+}
+
 function unmount_snapshots(array $snapshots): void
 {
     foreach ($snapshots as $dataset => $snapshot_name) {
-        if (!system_command('umount ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name))) {
+        $mountpoint = '/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name;
+        if (!is_mountpoint($mountpoint)) {
+            logger('Snapshot ' . $dataset . '@' . $snapshot_name . ' is not mounted, skipping unmount');
+            continue;
+        }
+        if (!system_command('umount ' . escapeshellarg($mountpoint))) {
             logger('Cannot unmount snapshot ' . $dataset . '@' . $snapshot_name, LOG_LEVEL::ERROR);
         }
     }
