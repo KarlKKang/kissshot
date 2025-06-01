@@ -49,26 +49,20 @@ function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
 function system_command(string $command, array &$output = [], bool $log_error = true): bool
 {
     $command .= ' 2>&1';
-    try {
-        $result = exec($command, $output, $retval);
-    } catch (ValueError $e) {
-        logger('Cannot execute system command: ' . $command);
-        logger($e->getMessage());
-        return false;
+    exec($command, $output, $retval);
+    if ($retval === 0) {
+        return true;
     }
-    if ($retval !== 0 || $result === false) {
-        if ($log_error) {
-            logger('Command exited with error code ' . $retval . ': ' . $command);
-            foreach ($output as $line) {
-                if (empty($line)) {
-                    continue;
-                }
-                logger($line);
+    if ($log_error) {
+        logger('Command exited with error code ' . $retval . ': ' . $command);
+        foreach ($output as $line) {
+            if (empty($line)) {
+                continue;
             }
+            logger($line);
         }
-        return false;
     }
-    return true;
+    return false;
 }
 
 class RuntimeStateException extends Exception {}
