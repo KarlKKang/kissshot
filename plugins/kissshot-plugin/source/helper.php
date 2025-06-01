@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 enum LOG_LEVEL: string
 {
     case INFO = 'notice';
