@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2025.06.01">
-<!ENTITY md5       "c110476505a502e4bc84a8f74b54b5d5">
+<!ENTITY md5       "6856a38fe008b84df5e22d858507b322">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -11,6 +11,7 @@
 <CHANGES>
 ###2025.06.01
 - Check snapshots are actually mounted before trying to unmount them.
+- Avoid repeatedly sending unhealthy notifications for the same issue.
 
 ###2025.05.26
 - Scrub Btrfs asynchronously.

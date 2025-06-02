@@ -60,7 +60,7 @@ function get_btrfs_devices(): array
     return $devices;
 }
 
-function check_zpool(string $zpool, bool $scrub): void
+function check_zpool(string $zpool, bool $scrub, RuntimeState $runtime): void
 {
     if ($scrub) {
         if (system_command('zpool scrub ' . escapeshellarg($zpool))) {
@@ -75,24 +75,36 @@ function check_zpool(string $zpool, bool $scrub): void
         logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
         return;
     }
+    $previously_healthy = $runtime->state['zfs'][$zpool]['healthy'] ?? true;
     $healthy = true;
     foreach ($output as $line) {
         if (empty($line)) {
             continue;
         }
         if ($line !== "pool '" . $zpool . "' is healthy") {
-            logger($line);
+            if ($previously_healthy) {
+                logger($line);
+            }
             $healthy = false;
         }
     }
+    $runtime->state['zfs'][$zpool]['healthy'] = $healthy;
     if ($healthy) {
-        logger('zpool is healthy: ' . $zpool);
+        if ($previously_healthy) {
+            logger('zpool is healthy: ' . $zpool);
+        } else {
+            logger('zpool returned to healthy state: ' . $zpool, send_notification: true);
+        }
     } else {
-        logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
+        if ($previously_healthy) {
+            logger('ZFS errors detected on: ' . $zpool, LOG_LEVEL::ERROR);
+        } else {
+            logger('zpool remains unhealthy: ' . $zpool);
+        }
     }
 }
 
-function check_btrfs(string $device, bool $scrub): void
+function check_btrfs(string $device, bool $scrub, RuntimeState $runtime): void
 {
     $output = [];
     if ($scrub) {
@@ -103,10 +115,21 @@ function check_btrfs(string $device, bool $scrub): void
             return;
         }
     }
-    if (system_command('btrfs dev stats -c ' . escapeshellarg($device))) {
-        logger('Btrfs device is healthy: ' . $device);
+    $previously_healthy = $runtime->state['btrfs'][$device]['healthy'] ?? true;
+    $healthy = system_command('btrfs dev stats -c ' . escapeshellarg($device));
+    $runtime->state['btrfs'][$device]['healthy'] = $healthy;
+    if ($healthy) {
+        if ($previously_healthy) {
+            logger('Btrfs device is healthy: ' . $device);
+        } else {
+            logger('Btrfs returned to healthy state: ' . $device, send_notification: true);
+        }
     } else {
-        logger('Btrfs errors detected on: ' . $device, LOG_LEVEL::ERROR);
+        if ($previously_healthy) {
+            logger('Btrfs errors detected on: ' . $device, LOG_LEVEL::ERROR);
+        } else {
+            logger('Btrfs device remains unhealthy: ' . $device);
+        }
     }
 }
 
@@ -133,13 +156,13 @@ function health_check(RuntimeState $runtime): void
     if (in_array('zfs', $all_fstypes, true)) {
         $zpools = get_zpools();
         foreach ($zpools as $zpool) {
-            check_zpool($zpool, $scrub);
+            check_zpool($zpool, $scrub, $runtime);
         }
     }
     if (in_array('btrfs', $all_fstypes, true)) {
         $btrfs_devices = get_btrfs_devices();
         foreach ($btrfs_devices as $device) {
-            check_btrfs($device, $scrub);
+            check_btrfs($device, $scrub, $runtime);
         }
     }
 }

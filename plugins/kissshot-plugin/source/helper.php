@@ -27,9 +27,12 @@ function get_script_name(): string
     return $script_name;
 }
 
-function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO): void
+function logger(string $message, LOG_LEVEL $level = LOG_LEVEL::INFO, bool|null $send_notification = null): void
 {
-    if ($level !== LOG_LEVEL::INFO) {
+    if ($send_notification === null) {
+        $send_notification = $level !== LOG_LEVEL::INFO;
+    }
+    if ($send_notification) {
         $notification_title = getenv('NOTIFICATION_TITLE');
         if (!is_string($notification_title) || empty($notification_title)) {
             $notification_title = 'kissshot-plugin';
