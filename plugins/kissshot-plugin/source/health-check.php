@@ -64,7 +64,7 @@ function check_zpool(string $zpool, bool $scrub, RuntimeState $runtime): void
 {
     if ($scrub) {
         if (system_command('zpool scrub ' . escapeshellarg($zpool))) {
-            logger('zpool scrub started: ' . $zpool);
+            logger('zpool scrub started: ' . $zpool, send_notification: true);
         } else {
             logger('Cannot start zpool scrub: ' . $zpool, LOG_LEVEL::ERROR);
             return;
@@ -109,7 +109,7 @@ function check_btrfs(string $device, bool $scrub, RuntimeState $runtime): void
     $output = [];
     if ($scrub) {
         if (system_command('btrfs scrub start ' . escapeshellarg($device), $output)) {
-            logger('Btrfs scrub started: ' . $device);
+            logger('Btrfs scrub started: ' . $device, send_notification: true);
         } else {
             logger('Cannot start Btrfs scrub: ' . $device, LOG_LEVEL::ERROR);
             return;
