@@ -6,6 +6,7 @@ services:
       - /mnt/user/appdata/sftpgo/data:/srv/sftpgo
       - /mnt/user/appdata/sftpgo/home:/var/lib/sftpgo
       - /mnt/user/media:/data/media:ro
+      - /mnt/user/photos:/data/photos:ro
     ports:
       - 8080:8080
       - 2022:2022
