@@ -21,4 +21,9 @@ cat $SRC_DIR/rc.6 >./usr/local/etc/rc.d/rc.6
 cat $SRC_DIR/rc.runlog >./usr/local/etc/rc.d/rc.runlog
 cat $SRC_DIR/.config >"$CONFIG_DIR/.config"
 
+DOCKER_PLUGIN_DIR=./usr/local/lib/docker/cli-plugins
+mkdir -p $DOCKER_PLUGIN_DIR
+curl -fL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o $DOCKER_PLUGIN_DIR/docker-compose
+chmod +x $DOCKER_PLUGIN_DIR/docker-compose
+
 echo "bzfirmware: patches applied successfully"
