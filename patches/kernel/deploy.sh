@@ -19,12 +19,7 @@ fi
 DEPLOY_DIR=/mnt/rpool/root
 BZDIR="lib"
 if [ -x "$DEPLOY_DIR/sbin/init" ]; then
-    if [ -d "$DEPLOY_DIR/$BZDIR" ]; then
-        rmdir "$DEPLOY_DIR/$BZDIR" || {
-            echo "A previous version of $BZDIR already exists."
-            exit 1
-        }
-    fi
+    rm -rf "${DEPLOY_DIR:?}/$BZDIR"
     mv "$BZDIR" "$DEPLOY_DIR"
     chown root:root "$DEPLOY_DIR/$BZDIR"
     chmod 755 "$DEPLOY_DIR/$BZDIR"
