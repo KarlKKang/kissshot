@@ -66,6 +66,6 @@ rpool vdev…
 
 zfs create rpool/root
 ```
-Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive. To move the config folder to the zpool, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup. When finished, the zpool should be unmounted.
+Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.1.4. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive. To move the config folder to the zpool, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup. When finished, the zpool should be unmounted.
 
 On a patched system, before updating Unraid to a newer version, run `tools/pre_update.sh`. This will remove the `backup` folder to avoid reverting back to the old version. It will also rename the production root snapshot to `rpool/root@previous`. Then it's safe to run Unraid's update tool as usual. Before rebooting, run `tools/run_all.sh` to apply the new patches.
