@@ -31,8 +31,8 @@ SRC_WD="/usr/src/linux-${FULL_VER}-Unraid"
 
 cd /root
 
-curl -OL "https://cdn.kernel.org/pub/linux/kernel/v$MAJOR_VER.x/linux-$FULL_VER.tar.xz"
-curl -OL "https://cdn.kernel.org/pub/linux/kernel/v$MAJOR_VER.x/linux-$FULL_VER.tar.sign"
+curl -fOL "https://cdn.kernel.org/pub/linux/kernel/v$MAJOR_VER.x/linux-$FULL_VER.tar.xz"
+curl -fOL "https://cdn.kernel.org/pub/linux/kernel/v$MAJOR_VER.x/linux-$FULL_VER.tar.sign"
 unxz "linux-$FULL_VER.tar.xz"
 gpg2 --trust-model tofu --verify "linux-$FULL_VER.tar.sign"
 tar -xf "linux-$FULL_VER.tar"
@@ -56,8 +56,8 @@ KERNEL_RELEASE="$(make -s kernelrelease)"
 
 cd /root
 
-curl -OL "https://github.com/openzfs/zfs/releases/download/zfs-$ZFS_VER/zfs-$ZFS_VER.tar.gz"
-curl -OL "https://github.com/openzfs/zfs/releases/download/zfs-$ZFS_VER/zfs-$ZFS_VER.tar.gz.asc"
+curl -fOL "https://github.com/openzfs/zfs/releases/download/zfs-$ZFS_VER/zfs-$ZFS_VER.tar.gz"
+curl -fOL "https://github.com/openzfs/zfs/releases/download/zfs-$ZFS_VER/zfs-$ZFS_VER.tar.gz.asc"
 gpg2 --trust-model tofu --verify "zfs-$ZFS_VER.tar.gz.asc"
 tar -xzf "zfs-$ZFS_VER.tar.gz"
 cd "zfs-$ZFS_VER"
