@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export MAJOR_VER="6"
-export FULL_VER="6.12.24"
-export ZFS_VER="2.3.1"
+export FULL_VER="6.12.54"
+export ZFS_VER="2.3.4"
 
 set -e
 cd "$(dirname "$0")"
