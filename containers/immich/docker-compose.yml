@@ -101,7 +101,6 @@ services:
     restart: always
     ports:
       - 2283:2283
-      - 2283:2283/udp
     volumes:
       - ./caddy:/usr/bin/caddy
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

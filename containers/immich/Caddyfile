@@ -1,3 +1,9 @@
+{
+	servers {
+		protocols h1 h2
+	}
+}
+
 {$DOMAIN}:2283 {
 	tls {$EMAIL} {
 		dns cloudflare {$CF_API_TOKEN}
