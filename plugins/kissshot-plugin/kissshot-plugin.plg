@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.06.02">
-<!ENTITY md5       "ea9026144dd1521fce68e1a32ac05ca5">
+<!ENTITY version   "2025.12.13">
+<!ENTITY md5       "82e3cff246d7612e104e890b278490b3">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.12.13
+- Add DDNS service
+
 ###2025.06.02
 - Send notifications when scrubs are started.
 
@@ -143,9 +146,19 @@ The 'pre-install' script.
 -->
 <FILE Run="/bin/bash">
 <INLINE>
-# Remove emhttp files so we can re-install.
+# Remove cron job scripts
 rm -f /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
 rm -f /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
+
+# Stop and remove DDNS service
+if [ -x /etc/rc.d/rc.kissshot-ddns ]; then
+    /etc/rc.d/rc.kissshot-ddns stop 2&gt;&amp;1
+fi
+rm -f /etc/rc.d/rc6.d/K10kissshot-ddns 2&gt;&amp;1
+rm -f /etc/rc.d/rc.kissshot-ddns 2&gt;&amp;1
+rm -f /usr/local/sbin/kissshot-ddns 2&gt;&amp;1
+
+# Remove emhttp files so we can re-install.
 rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
 
 # Remove old 'bundle' files.
@@ -161,6 +174,14 @@ Install the plugin bundle.
 # Install the 'bundle'.
 mkdir -p /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
 tar -xf /boot/config/plugins/&name;/&name;-&version;.txz -C /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
+
+# Install and start DDNS service
+ln -s /usr/local/emhttp/plugins/&name;/system/ddns /usr/local/sbin/kissshot-ddns 2&gt;&amp;1
+mv /usr/local/emhttp/plugins/&name;/rc.d/rc.kissshot-ddns /etc/rc.d/rc.kissshot-ddns 2&gt;&amp;1
+mv /usr/local/emhttp/plugins/&name;/rc.d/rc6.d/K10kissshot-ddns /etc/rc.d/rc6.d/K10kissshot-ddns 2&gt;&amp;1
+/etc/rc.d/rc.kissshot-ddns start 2&gt;&amp;1
+
+# Install cron job scripts
 mv /usr/local/emhttp/plugins/&name;/cron/&name;.daily.sh /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
 mv /usr/local/emhttp/plugins/&name;/cron/&name;.hourly.sh /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
 </INLINE>
@@ -187,10 +208,22 @@ The 'remove' script.
 -->
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
-# Remove all plugin files.
+# Remove cron job scripts
 rm -f /etc/cron.daily/&name;.daily.sh 2&gt;&amp;1
 rm -f /etc/cron.hourly/&name;.hourly.sh 2&gt;&amp;1
+
+# Stop and remove DDNS service
+if [ -x /etc/rc.d/rc.kissshot-ddns ]; then
+    /etc/rc.d/rc.kissshot-ddns stop 2&gt;&amp;1
+fi
+rm -f /etc/rc.d/rc6.d/K10kissshot-ddns 2&gt;&amp;1
+rm -f /etc/rc.d/rc.kissshot-ddns 2&gt;&amp;1
+rm -f /usr/local/sbin/kissshot-ddns 2&gt;&amp;1
+
+# Remove emhttp files.
 rm -f -r /usr/local/emhttp/plugins/&name; 2&gt;&amp;1
+
+# Remove old 'bundle' files.
 rm -f /boot/config/plugins/&name;/&name;-&version;.txz 2&gt;&amp;1
 rmdir --ignore-fail-on-non-empty /boot/config/plugins/&name; 2&gt;&amp;1
 

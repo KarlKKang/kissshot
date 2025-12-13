@@ -1,0 +1,391 @@
+#!/usr/bin/php -q
+<?php
+
+declare(strict_types=1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require __DIR__ . '/pid-helper.php';
+
+const PID_FILE_PATH = '/run/kissshot-ddns.pid';
+
+/**
+ * Simple DDNS updater for Cloudflare.
+ *
+ * Environment variables:
+ *   CF_API_TOKEN    - Cloudflare API token with DNS Read & Write on the zone
+ *   CF_ZONE_ID      - Cloudflare Zone ID
+ *   CF_DNS_NAME     - DNS record name to update (e.g. "home.example.com")
+ *   CF_TTL          - TTL in seconds (e.g. "300", or "1" for 'auto') [optional, default: 300]
+ *   UPDATE_INTERVAL - Interval in seconds between updates [optional, default: 300]
+ *   ENABLE_IPV4     - Whether to update IPv4 address [optional, default: true]
+ *   ENABLE_IPV6     - Whether to update IPv6 address [optional, default: true]
+ */
+
+const IP_DISCOVERY_URL = 'https://adms.dela-grante.com/api/my_ip';
+
+# === Signal handling ===
+
+$stop = false;
+
+function handle_signal(int $signal): void
+{
+    global $stop;
+    $stop = true;
+}
+
+pcntl_async_signals(true);
+
+# === Utilities ===
+
+function log_message(string $message, $stream = null): void
+{
+    if ($stream === null) {
+        $stream = STDOUT;
+    }
+    $timestamp = date('Y-m-d H:i:s');
+    $formatted = sprintf('[%s] %s', $timestamp, $message);
+    fwrite($stream, $formatted . PHP_EOL);
+}
+
+function get_env_var(string $name, bool $required = true, ?string $default = null): ?string
+{
+    $value = getenv($name);
+    $not_set = $value === false || $value === '';
+    if ($required && $not_set) {
+        log_message("Missing required environment variable: {$name}", STDERR);
+        exit(1);
+    }
+    if ($not_set) {
+        $value = $default;
+    }
+    return $value;
+}
+
+function parse_bool_env(string $name, bool $default = false): bool
+{
+    $val = getenv($name);
+    if ($val === false) {
+        return $default;
+    }
+
+    $val = strtolower(trim($val));
+    return in_array($val, ['1', 'true', 'yes', 'on'], true);
+}
+
+# === IP Detection ===
+
+class DDNSRuntimeException extends RuntimeException {}
+
+function curl_setopt_wrapper(CurlHandle $handle, int $option, mixed $value): void 
+{ 
+    $result = curl_setopt($handle, $option, $value); 
+    if ($result === false) { 
+        throw new DDNSRuntimeException('Failed to set cURL option: ' . $option); 
+    } 
+}
+
+function http_get_ip_over_family(string $url, int $family, int $timeout = 5): string
+{
+    $ch = curl_init();
+    if ($ch === false) {
+        throw new DDNSRuntimeException('Failed to initialize cURL');
+    }
+
+    curl_setopt_wrapper($ch, CURLOPT_URL, $url);
+    curl_setopt_wrapper($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt_wrapper($ch, CURLOPT_TIMEOUT, $timeout);
+    curl_setopt_wrapper($ch, CURLOPT_FOLLOWLOCATION, true);
+
+    // Force IPv4 or IPv6.
+    if ($family === AF_INET) {
+        curl_setopt_wrapper($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    } elseif ($family === AF_INET6) {
+        curl_setopt_wrapper($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V6);
+    }
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+        throw new DDNSRuntimeException('cURL error: ' . $error);
+    }
+
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($status !== 200) {
+        throw new DDNSRuntimeException('Unexpected HTTP status: ' . $status);
+    }
+
+    return trim($response);
+}
+
+function get_public_ipv4(): ?string
+{
+    try {
+        return http_get_ip_over_family(IP_DISCOVERY_URL, AF_INET);
+    } catch (DDNSRuntimeException $e) {
+        log_message('[WARN] Failed to get IPv4 address: ' . $e->getMessage(), STDERR);
+        return null;
+    }
+}
+
+function get_public_ipv6(): ?string
+{
+    try {
+        return http_get_ip_over_family(IP_DISCOVERY_URL, AF_INET6);
+    } catch (DDNSRuntimeException $e) {
+        log_message('[WARN] Failed to get IPv6 address: ' . $e->getMessage(), STDERR);
+        return null;
+    }
+}
+
+# === Cloudflare API helpers ===
+
+class CloudflareClient
+{
+    private string $api_token;
+    private string $zone_id;
+
+    private const BASE_URL = 'https://api.cloudflare.com/client/v4';
+
+    public function __construct(string $api_token, string $zone_id)
+    {
+        $this->api_token = $api_token;
+        $this->zone_id = $zone_id;
+    }
+
+    private function get_request_headers(): array
+    {
+        return [
+            'Authorization: Bearer ' . $this->api_token,
+            'Content-Type: application/json',
+        ];
+    }
+
+    private function request(string $method, string $path, array $query_params = [], ?array $body = null): array
+    {
+        $url = self::BASE_URL . $path;
+
+        if (!empty($query_params)) {
+            $url .= '?' . http_build_query($query_params);
+        }
+
+        $ch = curl_init();
+        if ($ch === false) {
+            throw new DDNSRuntimeException('Failed to initialize cURL');
+        }
+
+        curl_setopt_wrapper($ch, CURLOPT_URL, $url);
+        curl_setopt_wrapper($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt_wrapper($ch, CURLOPT_HTTPHEADER, $this->get_request_headers());
+        curl_setopt_wrapper($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt_wrapper($ch, CURLOPT_FOLLOWLOCATION, true);
+
+        if ($body !== null) {
+            $body_json = json_encode($body);
+            if ($body_json === false) {
+                throw new DDNSRuntimeException('Failed to encode request body as JSON');
+            }
+            curl_setopt_wrapper($ch, CURLOPT_POSTFIELDS, $body_json);
+        }
+
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            $error = curl_error($ch);
+            curl_close($ch);
+            throw new DDNSRuntimeException('cURL error: ' . $error);
+        }
+
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status !== 200) {
+            throw new DDNSRuntimeException('Cloudflare API HTTP status: ' . $status . ', body: ' . $response);
+        }
+
+        $data = json_decode($response, true);
+        if ($data === null) {
+            throw new DDNSRuntimeException('Failed to decode Cloudflare API response as JSON');
+        }
+
+        return $data;
+    }
+
+    public function list_dns_records(string $record_type, string $name): array
+    {
+        $params = [
+            'type' => $record_type,
+            'name' => $name,
+        ];
+        $path = '/zones/' . $this->zone_id . '/dns_records';
+
+        $data = $this->request('GET', $path, $params);
+        return $data['result'] ?? [];
+    }
+
+    public function create_dns_record(string $record_type, string $name, string $content, int $ttl): array
+    {
+        $body = [
+            'type'    => $record_type,
+            'name'    => $name,
+            'content' => $content,
+            'ttl'     => $ttl,
+            'proxied' => false,
+        ];
+        $path = '/zones/' . $this->zone_id . '/dns_records';
+
+        $data = $this->request('POST', $path, body: $body);
+        return $data['result'] ?? [];
+    }
+
+    public function update_dns_record(string $record_id, string $record_type, string $name, string $content, int $ttl): array
+    {
+        $body = [
+            'type'    => $record_type,
+            'name'    => $name,
+            'content' => $content,
+            'ttl'     => $ttl,
+            'proxied' => false,
+        ];
+        $path = '/zones/' . $this->zone_id . '/dns_records/' . $record_id;
+
+        $data = $this->request('PUT', $path, body: $body);
+        return $data['result'] ?? [];
+    }
+
+    /**
+     * Create or update a record.
+     * Returns (record, created_bool).
+     */
+    public function upsert_dns_record(string $record_type, string $name, string $content, int $ttl): array
+    {
+        $existing = $this->list_dns_records($record_type, $name);
+        $record = $existing[0] ?? null;
+
+        if ($record !== null) {
+            $same_content = ($record['content'] ?? null) === $content;
+            $same_ttl     = ($record['ttl'] ?? null) === $ttl;
+            $proxied     = $record['proxied'] ?? null;
+
+            if ($same_content && $same_ttl && $proxied === false) {
+                // No update needed.
+                return [$record, false];
+            }
+
+            $record_id = $record['id'] ?? null;
+            if (!is_string($record_id)) {
+                throw new DDNSRuntimeException('Invalid existing DNS record ID');
+            }
+            $updated = $this->update_dns_record($record_id, $record_type, $name, $content, $ttl);
+            return [$updated, false];
+        }
+
+        $created = $this->create_dns_record($record_type, $name, $content, $ttl);
+        return [$created, true];
+    }
+}
+
+# === Main ===
+
+function ddns_run(CloudflareClient $cf, string $dns_name, int $ttl, bool $enable_ipv4, bool $enable_ipv6): void
+{
+    $ipv4 = get_public_ipv4();
+    $ipv6 = get_public_ipv6();
+
+    if ($ipv4 === null && $ipv6 === null) {
+        log_message('Could not detect either IPv4 or IPv6 address, nothing to do.', STDERR);
+        return;
+    }
+
+    if ($ipv4 !== null && $enable_ipv4) {
+        log_message('Detected public IPv4: ' . $ipv4);
+        try {
+            [$record, $created] = $cf->upsert_dns_record('A', $dns_name, $ipv4, $ttl);
+            $action = $created ? 'created' : 'updated';
+            $name = $record['name'] ?? '[unknown]';
+            $content = $record['content'] ?? '[unknown]';
+            log_message(sprintf('A record %s: %s -> %s', $action, $name, $content));
+        } catch (DDNSRuntimeException $e) {
+            log_message('[ERROR] Failed to update A record: ' . $e->getMessage(), STDERR);
+        }
+    }
+
+    if ($ipv6 !== null && $enable_ipv6) {
+        log_message('Detected public IPv6: ' . $ipv6);
+        try {
+            [$record, $created] = $cf->upsert_dns_record('AAAA', $dns_name, $ipv6, $ttl);
+            $action = $created ? 'created' : 'updated';
+            $name = $record['name'] ?? '[unknown]';
+            $content = $record['content'] ?? '[unknown]';
+            log_message(sprintf('AAAA record %s: %s -> %s', $action, $name, $content));
+        } catch (DDNSRuntimeException $e) {
+            log_message('[ERROR] Failed to update AAAA record: ' . $e->getMessage(), STDERR);
+        }
+    }
+}
+
+function main(): void
+{
+    global $stop;
+
+    $api_token           = get_env_var('CF_API_TOKEN');
+    $zone_id             = get_env_var('CF_ZONE_ID');
+    $dns_name            = get_env_var('CF_DNS_NAME');
+    $ttl_str             = get_env_var('CF_TTL', false, '300');
+    $update_interval_str = get_env_var('UPDATE_INTERVAL', false, '0');
+    $enable_ipv4         = parse_bool_env('ENABLE_IPV4', true);
+    $enable_ipv6         = parse_bool_env('ENABLE_IPV6', true);
+
+    if (!ctype_digit($ttl_str)) {
+        log_message("Invalid CF_TTL value: '$ttl_str'", STDERR);
+        exit(1);
+    }
+    $ttl = (int)$ttl_str;
+
+    if (!ctype_digit($update_interval_str)) {
+        log_message("Invalid UPDATE_INTERVAL value: '$update_interval_str'", STDERR);
+        exit(1);
+    }
+    $update_interval = (int)$update_interval_str;
+
+    if (!$enable_ipv4 && !$enable_ipv6) {
+        log_message('Both ENABLE_IPV4 and ENABLE_IPV6 are false; nothing to do.', STDERR);
+        return;
+    }
+
+    $cf = new CloudflareClient($api_token, $zone_id);
+    if ($update_interval <= 0) {
+        ddns_run($cf, $dns_name, $ttl, $enable_ipv4, $enable_ipv6);
+        return;
+    }
+
+    log_message('Starting DDNS updater in daemon mode.');
+    pcntl_signal(SIGHUP, SIG_IGN); // ignore SIGHUP in daemon mode, so it won't terminate on terminal close
+    pcntl_signal(SIGTERM, 'handle_signal');
+    pcntl_signal(SIGINT, 'handle_signal');
+    try {
+        create_pid_file(PID_FILE_PATH);
+    } catch (PIDRuntimeException $e) {
+        log_message('[ERROR] ' . $e->getMessage(), STDERR);
+        exit(1);
+    }
+    while (true) {
+        // sleep first in daemon mode to give time for the network to come up when started at boot
+        sleep($update_interval); // sleep will be interrupted and will not be restarted on signal
+        pcntl_signal_dispatch();
+        if ($stop) {
+            log_message('Received stop signal, exiting.');
+            break;
+        }
+        ddns_run($cf, $dns_name, $ttl, $enable_ipv4, $enable_ipv6);
+    }
+    remove_pid_file(PID_FILE_PATH);
+}
+
+if (PHP_SAPI === 'cli') {
+    main();
+}

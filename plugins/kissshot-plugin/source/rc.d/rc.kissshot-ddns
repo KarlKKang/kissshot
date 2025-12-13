@@ -1,0 +1,45 @@
+#!/bin/sh
+
+ddns_start() {
+  if [ -x /usr/local/sbin/kissshot-ddns ]; then
+    env_path="/boot/config/plugins/kissshot-plugin/ddns.env"
+    if [ -r "$env_path" ]; then
+        echo "Loading environment variables from $env_path"
+        set -a
+        . "$env_path"
+        set +a
+    fi
+    mkdir -p /var/log/kissshot-ddns
+    echo "Starting kissshot-ddns: /usr/local/sbin/kissshot-ddns >> /var/log/kissshot-ddns/info.log 2>> /var/log/kissshot-ddns/error.log &"
+    /usr/local/sbin/kissshot-ddns >> /var/log/kissshot-ddns/info.log 2>> /var/log/kissshot-ddns/error.log &
+  fi
+}
+
+ddns_stop() {
+  echo "Stopping kissshot-ddns"
+  if [ -r /run/kissshot-ddns.pid ]; then
+    kill "$(cat /run/kissshot-ddns.pid)"
+  else
+    killall --ns $$ kissshot-ddns
+  fi
+}
+
+ddns_restart() {
+  ddns_stop
+  sleep 1
+  ddns_start
+}
+
+case "$1" in
+'start')
+  ddns_start
+  ;;
+'stop')
+  ddns_stop
+  ;;
+'restart')
+  ddns_restart
+  ;;
+*)
+  echo "Usage: $0 {start|stop|restart}"
+esac

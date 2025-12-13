@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ -x /etc/rc.d/rc.kissshot-ddns ]; then
+  echo "Stopping kissshot-ddns..."
+  /etc/rc.d/rc.kissshot-ddns stop
+fi
