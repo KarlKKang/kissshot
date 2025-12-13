@@ -1,0 +1,55 @@
+#!/bin/sh
+
+xrayd_start() {
+  if [ -x /usr/local/sbin/xrayd ]; then
+    config_path="/boot/config/plugins/kissshot-plugin/xray/config.json"
+    if [ ! -r "$config_path" ]; then
+        echo "Configuration file $config_path not found or not readable. Aborting xrayd start."
+        return
+    fi
+    mkdir -p /var/log/xrayd
+    echo "Starting xrayd: /usr/local/sbin/xrayd -c $config_path >> /var/log/xrayd/info.log 2>> /var/log/xrayd/error.log &"
+    /usr/local/sbin/xrayd -c $config_path >> /var/log/xrayd/info.log 2>> /var/log/xrayd/error.log &
+  fi
+}
+
+xrayd_stop() {
+  echo "Stopping xrayd"
+  if [ -r /run/xrayd.pid ]; then
+    kill "$(cat /run/xrayd.pid)"
+  else
+    killall --ns $$ xrayd
+  fi
+}
+
+xrayd_reload() {
+  echo "Reloading xrayd"
+  if [ -r /run/xrayd.pid ]; then
+    kill -USR1 "$(cat /run/xrayd.pid)"
+  else
+    killall -USR1 --ns $$ xrayd
+  fi
+}
+
+xrayd_restart() {
+  xrayd_stop
+  sleep 1
+  xrayd_start
+}
+
+case "$1" in
+'start')
+  xrayd_start
+  ;;
+'stop')
+  xrayd_stop
+  ;;
+'restart')
+  xrayd_restart
+  ;;
+'reload')
+  xrayd_reload
+  ;;
+*)
+  echo "Usage: $0 {start|stop|restart|reload}"
+esac

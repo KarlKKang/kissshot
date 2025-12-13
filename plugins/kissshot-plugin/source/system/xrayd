@@ -1,0 +1,147 @@
+#!/usr/bin/php -q
+<?php
+
+declare(strict_types=1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require __DIR__ . '/helper.php';
+
+const PID_FILE_PATH = '/run/xrayd.pid';
+
+# === Signal Handling ===
+
+$stop_signal = null;
+$reload = false;
+
+function handle_stop_signal(int $signal): void
+{
+    global $stop_signal;
+    $stop_signal = $signal;
+}
+
+function handle_reload_signal(int $signal): void
+{
+    global $reload;
+    $reload = true;
+}
+
+pcntl_async_signals(true);
+pcntl_signal(SIGHUP, SIG_IGN);
+// waitpid will by default be restarted, so we set the third parameter to false
+pcntl_signal(SIGTERM, 'handle_stop_signal', false);
+pcntl_signal(SIGINT, 'handle_stop_signal', false);
+pcntl_signal(SIGUSR1, 'handle_reload_signal', false);
+
+# === Process Management ===
+
+function fork_xray(array $argv): int
+{
+    $pid = pcntl_fork();
+    if ($pid === -1) {
+        throw new RuntimeException('Failed to fork process');
+    } elseif ($pid === 0) {
+        // Child process
+        pcntl_exec('/usr/local/emhttp/plugins/kissshot-plugin/xray/xray', $argv);
+        exit(1); // If exec fails
+    }
+    // Parent process
+    return $pid;
+}
+
+function kill_and_wait(int $pid, int $signal): void
+{
+    posix_kill($pid, $signal);
+    do {
+        $ret = pcntl_waitpid($pid, $status);
+    } while ($ret === -1 && pcntl_get_last_error() === PCNTL_EINTR);
+    pcntl_signal_dispatch(); // make sure we have the latest signal state after a bunch of waitpid calls
+}
+
+# === Main ===
+
+function monitor_xray(int $pid): void
+{
+    global $stop_signal, $reload;
+    while(true) {
+        $ret = pcntl_waitpid($pid, $status);
+        if ($ret === -1 && pcntl_get_last_error() === PCNTL_EINTR) {
+            // interrupted by signal
+            pcntl_signal_dispatch();
+            if ($stop_signal !== null) {
+                log_message('[INFO] Received stop signal. Terminating xray subprocess (PID: ' . $pid . ').');
+                kill_and_wait($pid, $stop_signal);
+                return;
+            }
+            if ($reload) {
+                log_message('[INFO] Received reload signal. Waiting for 10 seconds before reloading.');
+                sleep(10);
+                kill_and_wait($pid, SIGTERM);
+                return;
+            }
+            // the signal is not relavant, continue waiting
+            continue;
+        }
+
+        if ($ret === $pid) {
+            // subprocess exited without being signaled by us
+            log_message('[WARNING] xray subprocess (PID: ' . $pid . ') exited unexpectedly. Restarting...', STDERR);
+            sleep(1);
+            pcntl_signal_dispatch();
+            return;
+        } else {
+            log_message('[ERROR] Unexpect return value '. $ret . ' from pcntl_waitpid with status ' . $status . '.', STDERR);
+            $stop_signal = SIGTERM; // setting stop signal to exit main loop
+            return;
+        }
+    }
+}
+
+function main(array $argv): void
+{
+    global $stop_signal, $reload;
+
+    try {
+        create_pid_file(PID_FILE_PATH);
+    } catch (PIDRuntimeException $e) {
+        log_message('[ERROR] ' . $e->getMessage(), STDERR);
+        exit(1);
+    }
+
+    $xray_argv = array_slice($argv, 1);
+    $argv[0] = __FILE__;
+    array_unshift($argv, '-q');
+    
+    while(true) {
+        // Signal handling after all subprocesses have exited
+        if ($stop_signal !== null) {
+            log_message('[INFO] Exiting the daemon.');
+            break;
+        }
+        if ($reload) {
+            log_message('[INFO] Reloading the daemon.');
+            pcntl_exec('/usr/bin/php', $argv);
+            log_message('[ERROR] Failed to reload the daemon, restarting in the current instance.', STDERR);
+            $reload = false;
+        }
+
+        // Launch xray subprocess
+        try {
+            $child_pid = fork_xray($xray_argv);
+        } catch (RuntimeException $e) {
+            log_message('[ERROR] ' . $e->getMessage(), STDERR);
+            sleep(1);
+            pcntl_signal_dispatch();
+            continue;
+        }
+
+        // Monitor xray subprocess
+        monitor_xray($child_pid);
+    }
+
+    remove_pid_file(PID_FILE_PATH);
+}
+
+if (PHP_SAPI === 'cli') {
+    main($argv);
+}

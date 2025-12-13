@@ -17,3 +17,4 @@
 /patches/kernel/lib
 /patches/kernel/old_modules.txt
 /patches/kernel/new_modules.txt
+/plugins/kissshot-plugin/source/xray
