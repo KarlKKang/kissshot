@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2025.12.13">
-<!ENTITY md5       "6a890267ab572ed233bfe661986e3859">
+<!ENTITY version   "2025.12.14">
+<!ENTITY md5       "c2524f87d287875d5ec3839a6f4144dc">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2025.12.14
+- DDNS: distinguish between unchanged and updated records in the log messages.
+
 ###2025.12.13
 - Add DDNS service
 - Add Xray service
