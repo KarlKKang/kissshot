@@ -5,7 +5,7 @@ set -e
 ver=$(date +%Y.%m.%d)
 cd "$(dirname "$0")"
 
-if [ ! -f source/xray/xray ]; then
+if [ ! -f source/xray/xray ] || [ ! -f source/xray/geoip.dat ] || [ ! -f source/xray/geosite.dat ]; then
     echo "Please build xray binary first."
     exit 1
 fi
