@@ -249,7 +249,14 @@ class CloudflareClient
 
     /**
      * Create or update a record.
-     * Returns (record, created_bool).
+     * 
+     * @param string $record_type 'A' or 'AAAA'
+     * @param string $name DNS record name to create or update
+     * @param string $content IP address to set
+     * @param int    $ttl TTL in seconds
+     * 
+     * @return array{array, int} Returns a tuple of (record data array, action code)
+     *                           where action code is 0 = no change, 1 = updated, 2 = created
      */
     public function upsert_dns_record(string $record_type, string $name, string $content, int $ttl): array
     {
@@ -263,7 +270,7 @@ class CloudflareClient
 
             if ($same_content && $same_ttl && $proxied === false) {
                 // No update needed.
-                return [$record, false];
+                return [$record, 0];
             }
 
             $record_id = $record['id'] ?? null;
@@ -271,11 +278,11 @@ class CloudflareClient
                 throw new DDNSRuntimeException('Invalid existing DNS record ID');
             }
             $updated = $this->update_dns_record($record_id, $record_type, $name, $content, $ttl);
-            return [$updated, false];
+            return [$updated, 1];
         }
 
         $created = $this->create_dns_record($record_type, $name, $content, $ttl);
-        return [$created, true];
+        return [$created, 2];
     }
 }
 
@@ -295,7 +302,12 @@ function ddns_run(CloudflareClient $cf, string $dns_name, int $ttl, bool $enable
         log_message('Detected public IPv4: ' . $ipv4);
         try {
             [$record, $created] = $cf->upsert_dns_record('A', $dns_name, $ipv4, $ttl);
-            $action = $created ? 'created' : 'updated';
+            $action = match ($created) {
+                0 => 'unchanged',
+                1 => 'updated',
+                2 => 'created',
+                default => '[unknown]',
+            };
             $name = $record['name'] ?? '[unknown]';
             $content = $record['content'] ?? '[unknown]';
             log_message(sprintf('A record %s: %s -> %s', $action, $name, $content));
@@ -308,7 +320,12 @@ function ddns_run(CloudflareClient $cf, string $dns_name, int $ttl, bool $enable
         log_message('Detected public IPv6: ' . $ipv6);
         try {
             [$record, $created] = $cf->upsert_dns_record('AAAA', $dns_name, $ipv6, $ttl);
-            $action = $created ? 'created' : 'updated';
+            $action = match ($created) {
+                0 => 'unchanged',
+                1 => 'updated',
+                2 => 'created',
+                default => '[unknown]',
+            };
             $name = $record['name'] ?? '[unknown]';
             $content = $record['content'] ?? '[unknown]';
             log_message(sprintf('AAAA record %s: %s -> %s', $action, $name, $content));
