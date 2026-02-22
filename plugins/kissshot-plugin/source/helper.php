@@ -189,6 +189,7 @@ class ArrayLock
         if (flock($this->fp, LOCK_SH | LOCK_NB) === false) {
             throw new ArrayLockException();
         }
+        clearstatcache();
         if (!is_file(self::LOCK_FILE)) {
             throw new ArrayLockException();
         }
