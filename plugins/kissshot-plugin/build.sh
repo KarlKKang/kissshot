@@ -15,8 +15,8 @@ rm -f kissshot-plugin-*.txz
 find source/event -type f -exec chmod +x {} \;
 find source/rc.d -type f -exec chmod +x {} \;
 find source -type f -name "*.sh" -exec chmod +x {} \;
-chmod +x source/system/ddns
-chmod +x source/system/xrayd
+chmod +x source/sbin/ddns
+chmod +x source/sbin/xrayd
 chmod +x source/xray/xray
 tar -cJf kissshot-plugin-$ver.txz -C source .
 
