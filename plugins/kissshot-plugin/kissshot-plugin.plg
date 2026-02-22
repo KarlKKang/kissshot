@@ -3,7 +3,7 @@
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
 <!ENTITY version   "2026.02.22">
-<!ENTITY md5       "8c505d533b65dd51310f02a7aa144613">
+<!ENTITY md5       "a9e603fb1007c360c64c6efa3a46ac81">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
@@ -12,6 +12,7 @@
 ###2026.02.22
 - Rename the `system` directory to `sbin` since scripts in this directory were involuntarily triggered by the WebGUI.
 - Clear the stat cache before checking for array lock file.
+- Make cron commands run in the background.
 
 ###2025.12.14
 - DDNS: distinguish between unchanged and updated records in the log messages.
