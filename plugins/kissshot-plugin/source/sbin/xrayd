@@ -109,7 +109,6 @@ function main(array $argv): void
     }
 
     $xray_argv = array_slice($argv, 1);
-    $argv[0] = __FILE__;
     array_unshift($argv, '-q');
     
     while(true) {
