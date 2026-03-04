@@ -12,9 +12,9 @@ However, under memory pressure, `/usr` and `/lib` will be evicted from RAM, and 
 
 [Unraid 7.0](https://docs.unraid.net/unraid-os/release-notes/7.0.0/#excessive-flash-drive-activity-slows-the-system-down) introduces the `fastusr` functionality, so that `/usr` is always run in RAM to avoid the performance issues. However, `/lib` is still mounted from the flash. 
 
-This patch unpacks the entire root onto a ZFS pool. NVMe SSDs are preferred for performance reasons, so the kernel is recompiled with the NVMe drivers built in. This provides much higher reliability and resiliency while also leaving plenty of headroom for future growth of the OS size. The XZ decompression overhead is also avoided. The mounted root is a ZFS clone that starts fresh on every boot, so no state will be preserved across reboots, just like the stock behavior.
+This patch unpacks the entire root onto a ZFS pool. This provides much higher reliability and resiliency while also leaving plenty of headroom for future growth of the OS size. The mounted root is a ZFS clone that starts fresh on every boot, so no state will be preserved across reboots, just like the stock behavior.
 
-More RAM should also be made available with this patch. Previously, the upper and work directories of the overlayfs were in RAM, which could be filled up with unpacked plugin files, especially as of right now the unraid-api comes with quite bloated npm packages. The initramfs is also removed when switching to the actual root.
+Another benefit this patch brings is that more RAM should become available. Previously, the upper and work directories of the overlayfs were in RAM, which could be filled up with unpacked plugin files, especially as of right now the unraid-api comes with quite bloated npm packages. With this patch all these files live on disk. Moreover, the initramfs is completely removed from RAM when switching to the actual root.
 
 > [!IMPORTANT]
 > The snapshot is destroyed and recreated **on boot**. So if there are any sensitive files that rely on the root being stored in RAM and deleted immediately on power loss, extra care needs to be taken. One such example is `/root/keyfile` used to unlock the LUKS encrypted drives. To resolve this issue, this patch mounts `/root` as a tmpfs. This way the keyfile only lives in RAM.
@@ -50,6 +50,8 @@ Therefore, I think the above solution has already achieved a decent level of int
 ## Applying Patches
 
 To apply the patches, on the Unraid system to be patched, first create a zpool and the root dataset:
+> [!NOTE]
+> NVMe SSDs are preferred for performance reasons. This patch already recompiles the kernel with the NVMe drivers built in. It's very possible that other types of drives may not work since the kernel is configured with a minimum set of built-in drivers.
 ```bash
 zpool create -f \
 -o ashift=12 \
@@ -66,6 +68,6 @@ rpool vdev…
 
 zfs create rpool/root
 ```
-Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.2.2. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive. To move the config folder to the zpool, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup. When finished, the zpool should be unmounted.
+Then run the `tools/run_all.sh` script. The `kernel-compiler` and `squashfs-tools` docker images as well as the `kernel-compiler-keyring` docker volume are required. They can be found in `../containers`. The patch is version-specific. Currently it's for Unraid 7.2.4. Old `bzroot` and `bzimage` are kept in the `backup` folder on the flash drive. To move the config folder to the zpool, run `tools/move_config.sh`. The original config folder will be renamed to `config.old` as a backup. When finished, the zpool should be unmounted.
 
 On a patched system, before updating Unraid to a newer version, run `tools/pre_update.sh`. This will remove the `backup` folder to avoid reverting back to the old version. It will also rename the production root snapshot to `rpool/root@previous`. Then it's safe to run Unraid's update tool as usual. Before rebooting, run `tools/run_all.sh` to apply the new patches.
