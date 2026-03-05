@@ -419,7 +419,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         ' -v /mnt/user/appdata/restic:/config:ro -v restic-cache:/cache' .
         ' -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key' .
         ' -e RESTIC_PASSWORD_FILE=/config/repository.key -e RESTIC_CACHE_DIR=/cache' .
-        ' --memory 1g --memory-swap -1';
+        ' --memory 2g --memory-swap -1';
     $cmd = $cmd_docker_prefix;
     foreach ($snapshots_to_restic as $dataset => $snapshot_name) {
         $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
