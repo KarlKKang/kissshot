@@ -59,7 +59,7 @@ services:
 
   redis:
     container_name: immich_redis
-    image: docker.io/valkey/valkey:8@sha256:81db6d39e1bba3b3ff32bd3a1b19a6d69690f94a3954ec131277b9a26b95b3aa
+    image: docker.io/valkey/valkey:9@sha256:3b55fbaa0cd93cf0d9d961f405e4dfcc70efe325e2d84da207a0a8e6d8fde4f9
     healthcheck:
       test: redis-cli ping || exit 1
     command: valkey-server --save ""
@@ -89,6 +89,8 @@ services:
       postgres -c config_file=/etc/postgresql/postgresql.conf -c full_page_writes=off -c wal_compression=off -c wal_init_zero=off -c wal_recycle=off -c huge_pages=off
     shm_size: 128mb
     restart: always
+    healthcheck:
+      disable: false
     deploy:
       resources:
         limits:
