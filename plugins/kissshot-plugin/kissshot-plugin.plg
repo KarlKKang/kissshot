@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2026.03.05">
-<!ENTITY md5       "e59bec7e2e8ea84ca28d817f899292c2">
+<!ENTITY version   "2026.07.11">
+<!ENTITY md5       "73b69f3d7210c34900ea20bc76235c9a">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2026.07.11
+- Remove restic memory limit.
+
 ###2026.03.05
 - Increase restic memory limit to 2GB.
 
