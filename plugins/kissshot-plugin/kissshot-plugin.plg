@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2026.07.11">
-<!ENTITY md5       "73b69f3d7210c34900ea20bc76235c9a">
+<!ENTITY version   "2026.08.08">
+<!ENTITY md5       "6fcfee7791b1096f56aa3e4522712b26">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2026.08.08
+- Update xray to v26.7.28.
+
 ###2026.07.11
 - Remove restic memory limit.
 
