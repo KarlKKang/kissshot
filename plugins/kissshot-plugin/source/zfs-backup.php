@@ -443,6 +443,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 3d --keep-within-hourly 7d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --keep-within-yearly 3y --prune';
     if (!system_command($cmd)) {
         logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
+        return;
     }
 
     $last_checked = $runtime->state['check'] ?? null;
@@ -459,16 +460,16 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         $check_subset_denominator = 4;
     }
     $check_subset_numerator = $check_subset_numerator % $check_subset_denominator + 1;
+    $subset = $check_subset_numerator . '/' . $check_subset_denominator;
+    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . $subset;
+    if (!system_command($cmd)) {
+        logger('Error during restic check', LOG_LEVEL::ERROR);
+        return;
+    }
     $runtime->state['check'] = $current_week;
     $runtime->state['check_subset_numerator'] = $check_subset_numerator;
     $runtime->state['check_subset_denominator'] = $check_subset_denominator;
-    $subset = $check_subset_numerator . '/' . $check_subset_denominator;
-    $cmd = $cmd_docker_prefix . ' restic/restic check -q --read-data-subset ' . $subset;
-    if (system_command($cmd)) {
-        logger('Restic repository check completed successfully for subset ' . $subset);
-    } else {
-        logger('Error during restic check', LOG_LEVEL::ERROR);
-    }
+    logger('Restic repository check completed successfully for subset ' . $subset);
 }
 
 function main(array $config): void
