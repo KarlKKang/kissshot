@@ -447,7 +447,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     }
 
     $last_checked = $runtime->state['check'] ?? null;
-    $current_week = date('Y-W');
+    $current_week = date('o-W');
     if ($last_checked === $current_week) {
         return;
     }

@@ -2,13 +2,19 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2026.08.08">
-<!ENTITY md5       "6fcfee7791b1096f56aa3e4522712b26">
+<!ENTITY version   "2026.08.30">
+<!ENTITY md5       "51f3421b44608e6abc3baeebb372b4e2">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2026.08.30
+- Some restic tuning.
+- Update restic forget policy.
+- Only update runtime state after successful restic checks.
+- Fix edge case in restic check scheduling at year boundaries.
+
 ###2026.08.08
 - Update xray to v26.7.28.
 
