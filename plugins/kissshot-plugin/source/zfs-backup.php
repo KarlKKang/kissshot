@@ -418,12 +418,12 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     $cmd_docker_prefix = 'docker run --rm --name restic --hostname KISSSHOT --network host' .
         ' -v /mnt/user/appdata/restic:/config:ro -v restic-cache:/cache' .
         ' -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key' .
-        ' -e RESTIC_PASSWORD_FILE=/config/repository.key -e RESTIC_CACHE_DIR=/cache';
+        ' -e RESTIC_PASSWORD_FILE=/config/repository.key -e RESTIC_CACHE_DIR=/cache -e GOMAXPROCS=2';
     $cmd = $cmd_docker_prefix;
     foreach ($snapshots_to_restic as $dataset => $snapshot_name) {
         $cmd .= ' -v ' . escapeshellarg('/mnt/' . $dataset . '/.zfs/snapshot/' . SNAPSHOT_PREFIX . $snapshot_name) . ':' . escapeshellarg('/data/' . $dataset) . ':ro';
     }
-    $cmd .= ' restic/restic backup -q';
+    $cmd .= ' restic/restic backup -q --no-scan';
     $last_force_run = $runtime->state['force_run'] ?? null;
     $current_month = date('Y-m');
     if ($last_force_run !== $current_month) {
@@ -440,7 +440,7 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     $runtime->state['force_run'] = $current_month;
     logger('Snapshots sent to restic for datasets: ' . implode(', ', array_keys($snapshots_to_restic)));
 
-    $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 1d --keep-within-hourly 3d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --prune';
+    $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 3d --keep-within-hourly 7d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --keep-within-yearly 3y --prune';
     if (!system_command($cmd)) {
         logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
     }
