@@ -2,13 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2026.09.08">
-<!ENTITY md5       "cd15d40699c3e2c81416de8cc17e0ce5">
+<!ENTITY version   "2026.09.09">
+<!ENTITY md5       "9a32472163d6b52cb44b82567f827962">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2026.09.09
+- Limit to one long restic task (force run and check) per day.
+- Run restic forget daily instead of hourly.
+
 ###2026.09.08
 - Set the restic `device-id-for-hardlinks` feature flag. Otherwise when backing up from ZFS snapshots, the whole tree is always considered as "changed".
 

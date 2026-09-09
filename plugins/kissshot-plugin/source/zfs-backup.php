@@ -415,6 +415,9 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         return;
     }
 
+    $current_date = date('Y-m-d');
+    $allow_long_task = ($runtime->state['long_task'] ?? null) !== $current_date;
+
     $cmd_docker_prefix = 'docker run --rm --name restic --hostname KISSSHOT --network host' .
         ' -v /mnt/user/appdata/restic:/config:ro -v restic-cache:/cache' .
         ' -e RESTIC_REPOSITORY_FILE=/config/repository -e AWS_SHARED_CREDENTIALS_FILE=/config/application.key' .
@@ -426,8 +429,11 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
     $cmd .= ' restic/restic backup -q --no-scan';
     $last_force_run = $runtime->state['force_run'] ?? null;
     $current_month = date('Y-m');
-    if ($last_force_run !== $current_month) {
+    $force = $last_force_run !== $current_month && $allow_long_task;
+    if ($force) {
         $cmd .= ' --force';
+        $runtime->state['long_task'] = $current_date;
+        $allow_long_task = false;
         logger('Sending snapshots to restic with a force rescan');
     }
     $cmd .= ' /data';
@@ -437,20 +443,27 @@ function send_to_restic(array $snapshots_to_restic, ResticRuntimeState $runtime)
         logger('Cannot send snapshots to restic', LOG_LEVEL::ERROR);
         return;
     }
-    $runtime->state['force_run'] = $current_month;
+    if ($force) {
+        $runtime->state['force_run'] = $current_month;
+    }
     logger('Snapshots sent to restic for datasets: ' . implode(', ', array_keys($snapshots_to_restic)));
 
-    $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 3d --keep-within-hourly 7d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --keep-within-yearly 3y --prune';
-    if (!system_command($cmd)) {
-        logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
-        return;
+    $last_forget = $runtime->state['forget'] ?? null;
+    if ($last_forget !== $current_date) {
+        $cmd = $cmd_docker_prefix . ' restic/restic forget -q --keep-within 3d --keep-within-hourly 7d --keep-within-daily 1m --keep-within-weekly 3m --keep-within-monthly 1y --keep-within-yearly 3y --prune';
+        if (!system_command($cmd)) {
+            logger('Cannot prune restic snapshots', LOG_LEVEL::ERROR);
+            return;
+        }
+        $runtime->state['forget'] = $current_date;
     }
 
     $last_checked = $runtime->state['check'] ?? null;
     $current_week = date('o-W');
-    if ($last_checked === $current_week) {
+    if ($last_checked === $current_week || !$allow_long_task) {
         return;
     }
+    $runtime->state['long_task'] = $current_date;
     $check_subset_numerator = $runtime->state['check_subset_numerator'] ?? null;
     if (!is_int($check_subset_numerator) || $check_subset_numerator < 0) {
         $check_subset_numerator = 0;
