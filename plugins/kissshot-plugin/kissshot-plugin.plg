@@ -2,13 +2,16 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name      "kissshot-plugin">
 <!ENTITY author    "KarlKKang">
-<!ENTITY version   "2026.09.09">
-<!ENTITY md5       "9a32472163d6b52cb44b82567f827962">
+<!ENTITY version   "2026.09.20">
+<!ENTITY md5       "8d8442669bf89638c40125b0ebde5251">
 ]>
 
 <PLUGIN name="&name;" author="&author;" version="&version;" icon="terminal">
 
 <CHANGES>
+###2026.09.20
+- Set `GOGC=20` to save some memory during restic operations.
+
 ###2026.09.09
 - Limit to one long restic task (force run and check) per day.
 - Run restic forget daily instead of hourly.
